@@ -195,7 +195,9 @@ function PageTitle({icon,title,text}){return <div className="page-title"><div cl
 function Empty({page}){return <div className="empty"><Bookmark size={34}/><h3>{page==="search"?"No titles found":"Nothing here yet"}</h3><p>Try another collection or search for a different title.</p></div>}
 
 function Details({item,close,toggleWatch,saved,openDetails}){
-  const trailer=item.videos?.results?.find(v=>v.site==="YouTube"&&(v.type==="Trailer"||v.type==="Teaser"));
+  const [showTrailer,setShowTrailer]=useState(false);
+  const trailer=item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Trailer"&&v.key)
+    || item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Teaser"&&v.key);
   const cast=item.credits?.cast?.slice(0,8)||[];
   const rec=item.recommendations?.results?.filter(x=>x.poster_path).slice(0,8)||[];
   return <div className="modal-backdrop" onMouseDown={e=>e.target===e.currentTarget&&close()}>
@@ -210,12 +212,13 @@ function Details({item,close,toggleWatch,saved,openDetails}){
             <h1>{titleOf(item)}</h1>
             <div className="meta"><span className="rating"><Star size={14} fill="currentColor"/> {scoreOf(item)}</span><span>{yearOf(item)||"—"}</span><span>{item.runtime?`${item.runtime} min`:item.number_of_seasons?`${item.number_of_seasons} Seasons`:"HD"}</span></div>
             <p>{item.overview || "No overview available."}</p>
-            <div className="hero-actions"><button className="primary-btn" onClick={()=>alert("Connect your authorized video provider in the player layer.")}><Play size={17} fill="currentColor"/> Play</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button>{trailer&&<a className="glass-btn" href={`https://www.youtube.com/watch?v=${trailer.key}`} target="_blank" rel="noreferrer"><Play size={16}/> Trailer</a>}</div>
+            <div className="hero-actions"><button className="primary-btn" onClick={()=>setShowTrailer(true)} disabled={!trailer}><Play size={17} fill="currentColor"/> {trailer?"Play Trailer":"Trailer Unavailable"}</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button>{trailer&&<a className="glass-btn" href={`https://www.youtube.com/watch?v=${trailer.key}`} target="_blank" rel="noreferrer"><Play size={16}/> YouTube</a>}</div>
             <div className="genres">{item.genres?.map(g=><span key={g.id}>{g.name}</span>)}</div>
           </div>
         </div>
       </div>
       <div className="details-body">
+        {showTrailer&&trailer&&<div className="detail-block trailer-block"><div className="trailer-heading"><h3>Now Playing · {titleOf(item)} Trailer</h3><button className="glass-btn" onClick={()=>setShowTrailer(false)}><X size={15}/> Close</button></div><div className="trailer-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0&modestbranding=1`} title={`${titleOf(item)} trailer`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen/></div></div>}
         <div className="detail-block"><h3>About this title</h3><p>{item.overview || "No description available."}</p></div>
         {cast.length>0&&<div className="detail-block"><h3>Cast</h3><div className="cast">{cast.map(c=><div className="cast-item" key={c.id}><img src={img(c.profile_path,"w185")} alt={c.name}/><strong>{c.name}</strong><span>{c.character}</span></div>)}</div></div>}
         {rec.length>0&&<div className="detail-block"><h3>You may also like</h3><div className="mini-grid">{rec.map(x=><MovieCard key={x.id} item={{...x,media_type:item.media_type}} openDetails={openDetails}/>)}</div></div>}
