@@ -56,8 +56,7 @@ export default async function handler(req, res) {
     const contentType = upstream.headers.get("content-type") || "";
     if (isEmbed || contentType.includes("text/html")) {
       const html = (await upstream.text())
-        .replace(/FAK\\s*LABS/gi, "ZXH-OFFICIAL LAB CREW")
-        .replace(/FAK\\s*LABS/gi, "ZXH-OFFICIAL LAB CREW");
+        .replace(/FAK\s*LABS/gi, "ZXH-OFFICIAL LAB CREW");
       res.status(upstream.status);
       res.setHeader("Content-Type", contentType || "text/html; charset=utf-8");
       res.setHeader("Cache-Control", "no-store");
