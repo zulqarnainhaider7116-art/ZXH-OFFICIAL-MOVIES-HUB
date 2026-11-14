@@ -37,3 +37,11 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
   footer{padding:30px 20px 95px;display:block;text-align:center}.footer-brand{justify-content:center}.footer-brand+p{margin:18px auto;max-width:500px}.details-modal{max-height:95vh;border-radius:23px}.modal-backdrop{padding:10px}.details-cover{min-height:auto;background-image:none!important}.cover-shade{display:none}.details-top{padding:45px 20px 20px;min-height:auto;display:block}.details-top>img{width:145px;display:block;margin-bottom:20px}.details-copy h1{font-size:36px;letter-spacing:-1.7px}.details-copy p{font-size:12px}.details-body{padding:10px 20px 30px}.cast-item{min-width:80px;width:80px}.cast-item img{width:80px;height:95px}.mini-grid{gap:10px}.mini-grid .movie-card{width:115px;min-width:115px}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* Embedded trailer player */
+.trailer-block{width:100%;min-width:0}
+.trailer-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.trailer-heading h3{margin:0}
+.trailer-frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:18px;background:#000;box-shadow:0 16px 42px rgba(0,0,0,.22)}
+.trailer-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+@media(max-width:600px){.trailer-frame{border-radius:12px}.trailer-heading{align-items:flex-start}.trailer-heading .glass-btn{flex-shrink:0}}
