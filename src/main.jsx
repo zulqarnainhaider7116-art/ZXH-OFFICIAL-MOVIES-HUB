@@ -206,6 +206,8 @@ function Details({item,close,toggleWatch,saved,openDetails}){
     try{
       const kind=item.media_type==="tv"?"series":"movie";
       const response=await fetch("/api/fak/search?q="+encodeURIComponent(titleOf(item))+"&type="+kind);
+      const contentType=response.headers.get("content-type")||"";
+      if(!contentType.includes("application/json")) throw new Error("Movie API route is not responding with JSON yet. Please retry after deployment.");
       const payload=await response.json();
       if(!response.ok||payload.error) throw new Error(payload.error?.message||"FAK LABS search failed.");
       const results=payload.data?.results||[];setFakResults(results);
@@ -219,6 +221,8 @@ function Details({item,close,toggleWatch,saved,openDetails}){
       setFakLoading(true);
       try{
         const response=await fetch("/api/fak/series/"+encodeURIComponent(result.id));
+        const contentType=response.headers.get("content-type")||"";
+        if(!contentType.includes("application/json")) throw new Error("Movie API route is not responding with JSON yet. Please retry after deployment.");
         const payload=await response.json();
         if(!response.ok||payload.error) throw new Error(payload.error?.message||"Could not load series episodes.");
         const episodes=payload.data?.episodes||[];setFakEpisodes(episodes);setFakPlayer(null);
