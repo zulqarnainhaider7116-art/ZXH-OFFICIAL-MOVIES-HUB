@@ -47,7 +47,7 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 @media(max-width:600px){.trailer-frame{border-radius:12px}.trailer-heading{align-items:flex-start}.trailer-heading .glass-btn{flex-shrink:0}}
 
 
-/* FAK LABS player integration */
+/* ZXH-OFFICIAL LAB CREW player integration */
 .fak-block{margin-top:26px}
 .fak-powered{display:inline-flex;align-items:center;gap:6px;margin-top:7px;color:var(--muted,#a8a8b5);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 .fak-results{display:grid;gap:10px;margin-top:18px}
