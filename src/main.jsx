@@ -209,10 +209,10 @@ function Details({item,close,toggleWatch,saved,openDetails}){
       const contentType=response.headers.get("content-type")||"";
       if(!contentType.includes("application/json")) throw new Error("Movie API route is not responding with JSON yet. Please retry after deployment.");
       const payload=await response.json();
-      if(!response.ok||payload.error) throw new Error(payload.error?.message||"FAK LABS search failed.");
+      if(!response.ok||payload.error) throw new Error(payload.error?.message||"ZXH-OFFICIAL LAB CREW API search failed.");
       const results=payload.data?.results||[];setFakResults(results);
-      if(!results.length)setFakError("No matching title was found in FAK LABS.");
-    }catch(e){setFakError(e.message||"Unable to search FAK LABS.");}
+      if(!results.length)setFakError("No matching title was found in ZXH-OFFICIAL LAB CREW API.");
+    }catch(e){setFakError(e.message||"Unable to search ZXH-OFFICIAL LAB CREW API.");}
     finally{setFakLoading(false);}
   };
   const chooseFakResult=async(result)=>{
@@ -254,12 +254,12 @@ function Details({item,close,toggleWatch,saved,openDetails}){
       </div>
       <div className="details-body">
         {(fakLoading||fakError||fakResults.length>0||fakEpisodes.length>0||fakPlayer)&&<div className="detail-block fak-block">
-          <div className="trailer-heading"><div><h3>Watch with FAK LABS</h3><span className="fak-powered">Powered by FAK LABS</span></div>{fakResults.length>0&&<button className="glass-btn" onClick={()=>{setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");}}>Reset</button>}</div>
+          <div className="trailer-heading"><div><h3>Watch with ZXH-OFFICIAL LAB CREW API</h3><span className="fak-powered">Powered by ZXH-OFFICIAL LAB CREW</span></div>{fakResults.length>0&&<button className="glass-btn" onClick={()=>{setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");}}>Reset</button>}</div>
           {fakLoading&&<p>Searching available sources…</p>}
           {fakError&&<p className="fak-error">{fakError}</p>}
           {fakResults.length>0&&<div className="fak-results">{fakResults.map((result,index)=><button className="fak-result" key={result.id||index} onClick={()=>chooseFakResult(result)}><img src={result.image||""} alt="" loading="lazy"/><span><strong>{result.title}</strong><small>{result.year||"Year unavailable"} · {result.type} {result.views?"· "+result.views+" views":""}</small></span><ChevronRight size={18}/></button>)}</div>}
           {fakEpisodes.length>0&&<div className="fak-results">{fakEpisodes.map((episode,index)=><button className="fak-result fak-episode" key={episode.id||index} onClick={()=>setFakPlayer({kind:"episode",id:episode.id,title:episode.title||"Episode "+(episode.episode||index+1)})}><span className="episode-number">{episode.episode||index+1}</span><span><strong>{episode.title||"Episode "+(episode.episode||index+1)}</strong><small>Season {episode.season||1} · Episode {episode.episode||index+1}</small></span><Play size={17}/></button>)}</div>}
-          {fakPlayer&&<div className="fak-player-wrap"><div className="trailer-heading"><h3>{fakPlayer.title||titleOf(item)}</h3><button className="glass-btn" onClick={()=>setFakPlayer(null)}>Close Player</button></div><div className="fak-player-frame"><iframe src={"/api/fak/embed/"+fakPlayer.kind+"/"+encodeURIComponent(fakPlayer.id)} title={fakPlayer.title||titleOf(item)} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="lazy"/></div><span className="fak-powered">Powered by FAK LABS · ZXH OFFICIAL</span></div>}
+          {fakPlayer&&<div className="fak-player-wrap"><div className="trailer-heading"><h3>{fakPlayer.title||titleOf(item)}</h3><button className="glass-btn" onClick={()=>setFakPlayer(null)}>Close Player</button></div><div className="fak-player-frame"><iframe src={"/api/fak/embed/"+fakPlayer.kind+"/"+encodeURIComponent(fakPlayer.id)} title={fakPlayer.title||titleOf(item)} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="lazy"/></div><span className="fak-powered">Powered by ZXH-OFFICIAL LAB CREW</span></div>}
         </div>}
         {showTrailer&&trailer&&<div className="detail-block trailer-block"><div className="trailer-heading"><h3>Now Playing · {titleOf(item)} Trailer</h3><button className="glass-btn" onClick={()=>setShowTrailer(false)}><X size={15}/> Close</button></div><div className="trailer-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0&modestbranding=1`} title={`${titleOf(item)} trailer`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen/></div></div>}
         <div className="detail-block"><h3>About this title</h3><p>{item.overview || "No description available."}</p></div>
