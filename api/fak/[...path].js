@@ -1,5 +1,5 @@
 const API_ORIGIN = "https://movies-api.faizankhichi.me";
-const BRAND = { name: "FAK LABS", product: "Movies API", url: API_ORIGIN + "/api" };
+const BRAND = { name: "ZXH-OFFICIAL", product: "LAB CREW MOVIES API", url: "https://zxh-official-movies-hub.vercel.app" };
 
 function sendError(res, status, code, message) {
   return res.status(status).json({
@@ -55,7 +55,9 @@ export default async function handler(req, res) {
 
     const contentType = upstream.headers.get("content-type") || "";
     if (isEmbed || contentType.includes("text/html")) {
-      const html = await upstream.text();
+      const html = (await upstream.text())
+        .replace(/FAK\\s*LABS/gi, "ZXH-OFFICIAL LAB CREW")
+        .replace(/FAK\\s*LABS/gi, "ZXH-OFFICIAL LAB CREW");
       res.status(upstream.status);
       res.setHeader("Content-Type", contentType || "text/html; charset=utf-8");
       res.setHeader("Cache-Control", "no-store");
@@ -74,7 +76,7 @@ export default async function handler(req, res) {
     }
 
     // Keep the provider's documented envelope and never expose request credentials.
-    if (!payload.brand) payload.brand = BRAND;
+    payload.brand = BRAND;
     if (!payload.api) payload.api = "movies-api/v1";
     if (!payload.version) payload.version = "6.0";
     if (!upstream.ok && !payload.error) {
