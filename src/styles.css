@@ -45,3 +45,22 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 .trailer-frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:18px;background:#000;box-shadow:0 16px 42px rgba(0,0,0,.22)}
 .trailer-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 @media(max-width:600px){.trailer-frame{border-radius:12px}.trailer-heading{align-items:flex-start}.trailer-heading .glass-btn{flex-shrink:0}}
+
+
+/* FAK LABS player integration */
+.fak-block{margin-top:26px}
+.fak-powered{display:inline-flex;align-items:center;gap:6px;margin-top:7px;color:var(--muted,#a8a8b5);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.fak-results{display:grid;gap:10px;margin-top:18px}
+.fak-result{display:flex;align-items:center;gap:14px;width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,.12);border-radius:15px;background:rgba(255,255,255,.045);color:inherit;text-align:left;cursor:pointer;transition:background .2s,border-color .2s}
+.fak-result:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.25)}
+.fak-result img{width:48px;height:66px;flex:0 0 48px;object-fit:cover;border-radius:8px;background:#111}
+.fak-result>span:not(.episode-number){display:grid;gap:5px;min-width:0;flex:1}
+.fak-result strong{font-size:14px;line-height:1.35}
+.fak-result small{color:var(--muted,#a8a8b5);font-size:11px}
+.fak-error{color:#ff9b9b}
+.fak-episode{min-height:62px}
+.episode-number{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;border-radius:11px;background:rgba(255,255,255,.09);font-weight:800}
+.fak-player-wrap{margin-top:22px}
+.fak-player-frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:16px;background:#000;margin-top:12px}
+.fak-player-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+@media(max-width:600px){.fak-result{gap:10px;padding:9px}.fak-result img{width:42px;height:58px;flex-basis:42px}.fak-result strong{font-size:12px}.fak-player-frame{border-radius:12px}}
