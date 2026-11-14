@@ -19,7 +19,12 @@ export default async function handler(req, res) {
   const key = process.env.FAK_MOVIES_API_KEY;
   if (!key) return sendError(res, 503, "service_unavailable", "Movie playback is not configured yet.");
 
-  const parts = Array.isArray(req.query.path) ? req.query.path : String(req.query.path || "").split("/").filter(Boolean);
+  // Vercel catch-all params can be absent in some runtimes; derive the route from the request URL as a safe fallback.
+  const pathname = new URL(req.url || "/", `https://${req.headers.host || "localhost"}`).pathname;
+  const routeFromUrl = pathname.replace(/^\/api\/fak\/?/, "");
+  const routeParam = Array.isArray(req.query.path) ? req.query.path.join("/") : String(req.query.path || "");
+  const route = routeParam || routeFromUrl;
+  const parts = route.split("/").filter(Boolean);
   const safeParts = parts.map(part => String(part || "").trim()).filter(Boolean);
   const isEmbed = safeParts[0] === "embed";
   const allowed =
