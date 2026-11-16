@@ -3,8 +3,9 @@ import { createRoot } from "react-dom/client";
 import {
   Search, Home, Film, Tv, Heart, Clock3, UserRound, Menu, X, Play,
   Plus, Check, Star, ChevronRight, ChevronLeft, Info, SlidersHorizontal,
-  Sparkles, Bookmark, History, ArrowLeft, LoaderCircle, AlertCircle
+  Sparkles, Bookmark, History, ArrowLeft, LoaderCircle, AlertCircle, Radio
 } from "lucide-react";
+import LiveTV from "./LiveTV.jsx";
 import "./styles.css";
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || "5842b1e115a82d3dd7d335874888c943";
@@ -25,7 +26,7 @@ const scoreOf = x => Number(x?.vote_average || 0).toFixed(1);
 
 const navItems = [
   ["Home", Home, "home"], ["Movies", Film, "movie"], ["Series", Tv, "tv"],
-  ["My List", Heart, "list"], ["History", Clock3, "history"]
+  ["Live TV", Radio, "live"], ["My List", Heart, "list"], ["History", Clock3, "history"]
 ];
 
 function App(){
@@ -151,7 +152,7 @@ function App(){
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen"><LoaderCircle className="spin" size={34}/><span>Loading cinema…</span></div> :
       <>
-        {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : <>
+        {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : page==="live" ? <><LiveTV/><Footer/></> : <>
         {page==="home" && hero && <Hero item={hero} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved(hero.id)}/>}
         <main className={page==="home" ? "content home-content":"content"}>
           {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
@@ -513,7 +514,7 @@ function PlayerScreen({entry,onBack}){
 }
 
 function MobileNav({page,go}){
- return <nav className="mobile-nav glass">{navItems.slice(0,4).map(([label,Icon,key])=><button className={page===key?"active":""} key={key} onClick={()=>go(key)}><Icon size={19}/><span>{label}</span></button>)}</nav>
+ return <nav className="mobile-nav glass">{navItems.filter(([,Icon,key])=>["home","movie","tv","live"].includes(key)).map(([label,Icon,key])=><button className={page===key?"active":""} key={key} onClick={()=>go(key)}><Icon size={19}/><span>{label}</span></button>)}</nav>
 }
 function Footer(){
  return <footer><div className="footer-brand"><span className="brand-mark">Z</span><div><strong>ZXH MOVIES</strong><small>3D LIQUID GLASS CINEMA</small></div></div><p>Movie and TV metadata powered by TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.</p><span>© {new Date().getFullYear()} ZXH OFFICIAL</span></footer>
