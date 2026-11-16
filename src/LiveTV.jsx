@@ -34,7 +34,7 @@ export default function LiveTV(){
     if(!catalog)return [];
     const streamsByChannel=new Map();
     for(const stream of catalog.streams||[]){
-      if(!stream.channel||!stream.url||!/^https:\/\//i.test(stream.url))continue;
+      if(!stream.channel||!stream.url||!/^https:\/\//i.test(stream.url)||stream.referrer||stream.user_agent)continue;
       if((stream.labels||[]).some(x=>/geo-blocked|not 24\/7/i.test(x)))continue;
       if(!/\.m3u8(?:$|[?#])/i.test(stream.url))continue;
       const list=streamsByChannel.get(stream.channel)||[];list.push(stream);streamsByChannel.set(stream.channel,list);
