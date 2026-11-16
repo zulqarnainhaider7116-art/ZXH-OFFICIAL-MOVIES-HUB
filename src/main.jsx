@@ -52,7 +52,7 @@ function App(){
     let timer;
     const standalone=window.matchMedia?.("(display-mode: standalone)")?.matches||window.navigator.standalone===true;
     const alreadyInstalled=standalone||localStorage.getItem("pwaInstalled")==="true";
-    const dismissed=localStorage.getItem("pwaInstallPromptDismissed")==="true";
+    const dismissed=localStorage.getItem("pwaInstallPromptDismissed_v2")==="true";
     if(!alreadyInstalled&&!dismissed){
       timer=window.setTimeout(()=>setShowInstallPrompt(true),1500);
     }
@@ -78,7 +78,7 @@ function App(){
     };
   },[]);
   const dismissInstallPrompt=()=>{
-    localStorage.setItem("pwaInstallPromptDismissed","true");
+    localStorage.setItem("pwaInstallPromptDismissed_v2","true");
     setShowInstallPrompt(false);
   };
   const installApp=async()=>{
@@ -97,7 +97,7 @@ function App(){
       installPromptEvent.prompt();
       const choice=await installPromptEvent.userChoice;
       if(choice?.outcome==="accepted")localStorage.setItem("pwaInstalled","true");
-      else localStorage.setItem("pwaInstallPromptDismissed","true");
+      else localStorage.setItem("pwaInstallPromptDismissed_v2","true");
     }catch(error){
       setInstallHelpMessage("Open your browser menu and choose “Install app” or “Add to Home screen”.");
     }
