@@ -513,22 +513,22 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
       </div>
       <div className="details-body">
         <div className="detail-block anyplay-block">
-          <div className="trailer-heading"><div><h3>Watch with AnyPlay</h3><span className="fak-powered">External streaming servers · ZXH OFFICIAL player</span></div><span className="anyplay-count">{anyplayServers.length||"—"} SERVERS</span></div>
-          {anyplayLoading&&<p>Loading all available AnyPlay servers…</p>}
-          {anyplayError&&<p className="fak-error">{anyplayError}</p>}
+          <div className="trailer-heading"><div><h3>ZXH PLAYER</h3><span className="fak-powered">Choose a playback option</span></div></div>
+          {anyplayLoading&&<p>Preparing player…</p>}
+          {anyplayError&&<p className="fak-error">Playback options are temporarily unavailable. Please try again.</p>}
           {!anyplayLoading&&anyplayServers.length>0&&<>
             <div className="anyplay-controls">
-              <label><span>Streaming server</span><select value={anyplayServerId} onChange={e=>setAnyplayServerId(e.target.value)}>{anyplayServers.map((server,index)=><option key={server.id} value={server.id}>{server.name||"Server "+(index+1)}</option>)}</select></label>
+              <label><span>Playback option</span><select value={anyplayServerId} onChange={e=>setAnyplayServerId(e.target.value)}>{anyplayServers.map((server,index)=><option key={server.id} value={server.id}>Option {index+1}</option>)}</select></label>
               {item.media_type==="tv"&&<>
                 <label><span>Season</span><select value={anyplaySeason} onChange={e=>setAnyplaySeason(e.target.value)}>{(item.seasons||[]).filter(s=>s.season_number>0).map(s=><option key={s.id||s.season_number} value={s.season_number}>Season {s.season_number}</option>)}</select></label>
                 <label><span>Episode</span><select value={anyplayEpisode} onChange={e=>setAnyplayEpisode(e.target.value)} disabled={anyplayEpisodesLoading||!anyplayEpisodes.length}>{anyplayEpisodes.map(ep=><option key={ep.id} value={ep.episode_number}>Episode {ep.episode_number}{ep.name?" · "+ep.name:""}</option>)}</select></label>
               </>}
-              <button className="primary-btn anyplay-watch-btn" onClick={()=>playAnyPlay()} disabled={anyplayEpisodesLoading}><Play size={16} fill="currentColor"/> {anyplayEpisodesLoading?"Loading episodes…":"Watch on AnyPlay"}</button>
+              <button className="primary-btn anyplay-watch-btn" onClick={()=>playAnyPlay()} disabled={anyplayEpisodesLoading}><Play size={16} fill="currentColor"/> {anyplayEpisodesLoading?"Preparing…":"PLAY NOW"}</button>
             </div>
-            <div className="anyplay-server-list">{anyplayServers.map((server,index)=><button type="button" key={server.id} className={anyplayServerId===String(server.id)?"selected":""} onClick={()=>setAnyplayServerId(String(server.id))}><span>{server.name||"Server "+(index+1)}</span><small>{anyplayServerId===String(server.id)?"SELECTED":"AVAILABLE"}</small></button>)}</div>
+            <div className="anyplay-server-list">{anyplayServers.map((server,index)=><button type="button" key={server.id} className={anyplayServerId===String(server.id)?"selected":""} onClick={()=>setAnyplayServerId(String(server.id))}><span>OPTION {index+1}</span><small>{anyplayServerId===String(server.id)?"SELECTED":"SELECT"}</small></button>)}</div>
             {item.media_type==="tv"&&anyplayEpisodesLoading&&<p>Loading season episodes…</p>}
           </>}
-          <p className="youtube-note">AnyPlay provides third-party iframe embeds. Playback availability depends on the selected external server.</p>
+          
         </div>
         {activeSource==="fak"&&(fakLoading||fakError||fakResults.length>0||fakEpisodes.length>0||fakPlayer)&&<div className="detail-block fak-block">
           <div className="trailer-heading"><div><h3>Watch with ZXH-OFFICIAL LAB CREW API</h3><span className="fak-powered">Powered by ZXH-OFFICIAL LAB CREW</span></div>{fakResults.length>0&&<button className="glass-btn" onClick={()=>{setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");}}>Reset</button>}</div>
@@ -632,9 +632,10 @@ function PlayerScreen({entry,onBack}){
   const embedPath="/api/fak/embed/"+entry.kind+"/"+encodeURIComponent(entry.id);
   return <main className="player-page">
     <div className="player-topbar">
-      <div className="player-controls"><button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button><button className="glass-btn" onClick={togglePlayerFullscreen}><span>{isFullscreen?"Exit Fullscreen":"Fullscreen"}</span></button>{entry.source==="anyplay"&&entry.anyplayServers?.length>0&&<label className="player-server-picker"><span>SERVER</span><select value={activeAnyplayServer} onChange={e=>setActiveAnyplayServer(e.target.value)}>{entry.anyplayServers.map((server,index)=><option key={server.id} value={server.id}>{server.name||"Server "+(index+1)}</option>)}</select></label>}</div>
-      <span className="fak-powered">ZXH-OFFICIAL • MOVIES PLAYER</span>
+      <div className="player-controls"><button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button><button className="glass-btn" onClick={togglePlayerFullscreen}><span>{isFullscreen?"Exit Fullscreen":"Fullscreen"}</span></button>{entry.source==="anyplay"&&entry.anyplayServers?.length>0&&}</div>
+      <span className="fak-powered">ZXH OFFICIAL PLAYER</span>
     </div>
+    {entry.source==="anyplay"&&entry.anyplayServers?.length>1&&<div className="player-server-options" aria-label="Playback options">{entry.anyplayServers.map((server,index)=><button type="button" key={server.id} className={activeAnyplayServer===String(server.id)?"active":""} aria-pressed={activeAnyplayServer===String(server.id)} onClick={()=>setActiveAnyplayServer(String(server.id))}>OPTION {index+1}</button>)}</div>}
     <section className="player-heading">
       {poster&&<img src={poster} alt="" loading="lazy"/>}
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Playback powered by the authorized Movies API integration."}</p></div>
@@ -644,10 +645,10 @@ function PlayerScreen({entry,onBack}){
     </section>
     {entry.source==="youtube"&&<p className="youtube-note">YouTube video · played inside ZXH. YouTube attribution and player controls are retained.</p>}
     {entry.source!=="youtube"&&entry.source!=="archive"&&<div className="player-info-row">
-      <div><strong>Available servers</strong><span>{streams.length?streams.length+" server option(s) supplied by the API":"Server switching is provided by the embedded player."}</span></div>
-      <div><strong>Downloads</strong><span>{downloads.length?downloads.length+" option(s) supplied by the API":"No separate download options returned."}</span></div>
+      <div><strong>Available servers</strong><span>{streams.length?streams.length+" playback option(s)":"More options may be available inside the player."}</span></div>
+      <div><strong>Downloads</strong><span>{downloads.length?downloads.length+" options":"No separate downloads available."}</span></div>
     </div>}
-    {streams.length>0&&<section className="player-data-block"><h2>API stream data</h2><div className="player-stream-list">{streams.map((s,i)=><div className="player-stream" key={s.url||i}><span>{s.name||"Server "+(i+1)}</span><small>{s.kind||"Stream"}{s.playable===false?" · unavailable":" · API listed"}</small></div>)}</div></section>}
+    
     {downloads.length>0&&<section className="player-data-block"><h2>Available downloads</h2><div className="player-download-list">{downloads.map((d,i)=><a key={d.url||i} href={d.url} target="_blank" rel="noreferrer">{d.label||"Download "+(i+1)} <ChevronRight size={15}/></a>)}</div></section>}
     <p className="player-credit">ZXH-OFFICIAL · ZULQARNAIN X HAIDER</p>
   </main>;
