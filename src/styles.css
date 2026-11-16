@@ -539,3 +539,18 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 @keyframes installFade{from{opacity:0}to{opacity:1}}
 @keyframes installPop{from{opacity:0;transform:translateY(16px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:380px){.install-card{padding:27px 19px 20px;border-radius:27px}.install-card h2{font-size:22px}}
+
+
+/* ZXH native audio language selector */
+.audio-language-panel{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:16px 0 22px;padding:16px 18px;border:1px solid var(--line);border-radius:16px;background:#ffffff08}
+.audio-language-heading{display:flex;align-items:center;gap:11px;min-width:0;color:var(--text)}
+.audio-language-heading>svg{flex:0 0 auto;color:#aebcff}
+.audio-language-heading>div{display:grid;gap:4px}
+.audio-language-heading strong{font-size:13px}
+.audio-language-heading small,.audio-language-status{color:var(--muted);font-size:11px;line-height:1.55}
+.audio-language-select{display:grid;gap:6px;min-width:min(230px,100%);color:var(--muted);font-size:10px;font-weight:700}
+.audio-language-select select{width:100%;min-height:40px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#171923;color:var(--text);font:inherit;font-size:12px;outline:none}
+.audio-language-select select:disabled{opacity:.7;cursor:not-allowed}
+.audio-language-select option{background:#171923;color:#fff}
+.audio-language-status{flex:1 1 100%;margin:0}
+@media(max-width:600px){.audio-language-panel{align-items:stretch;gap:12px;padding:14px}.audio-language-select{min-width:100%}.audio-language-heading small{font-size:10px}}
