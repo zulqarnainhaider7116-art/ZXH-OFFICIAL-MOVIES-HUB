@@ -349,46 +349,6 @@ function Empty({page}){return <div className="empty"><Bookmark size={34}/><h3>{p
 function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const [showTrailer,setShowTrailer]=useState(false);
   const [activeSource,setActiveSource]=useState("");
-  const [anyplayServers,setAnyplayServers]=useState([]);
-  const [anyplayLoading,setAnyplayLoading]=useState(false);
-  const [anyplayError,setAnyplayError]=useState("");
-  const [anyplayServerId,setAnyplayServerId]=useState("");
-  const [anyplaySeason,setAnyplaySeason]=useState("1");
-  const [anyplayEpisode,setAnyplayEpisode]=useState("1");
-  const [anyplayEpisodes,setAnyplayEpisodes]=useState([]);
-  const [anyplayEpisodesLoading,setAnyplayEpisodesLoading]=useState(false);
-  useEffect(()=>{
-    let cancelled=false;
-    const loadServers=async()=>{
-      setAnyplayLoading(true);setAnyplayError("");
-      try{
-        const response=await fetch("/api/stream/servers");
-        if(!response.ok)throw new Error("Playback options unavailable.");
-        const payload=await response.json();
-        const servers=Array.isArray(payload)?payload:(payload.servers||payload.results||[]);
-        if(!servers.length)throw new Error("Playback options unavailable.");
-        if(!cancelled){setAnyplayServers(servers);setAnyplayServerId(String(servers[0].id));}
-      }catch(e){if(!cancelled)setAnyplayError(e.message||"Unable to load playback options.");}
-      finally{if(!cancelled)setAnyplayLoading(false);}
-    };
-    loadServers();
-    return()=>{cancelled=true};
-  },[item.id]);
-  useEffect(()=>{
-    if(item.media_type!=="tv"||!anyplaySeason)return;
-    let cancelled=false;
-    const loadEpisodes=async()=>{
-      setAnyplayEpisodesLoading(true);setAnyplayError("");
-      try{
-        const data=await api("/tv/"+item.id+"/season/"+anyplaySeason);
-        const episodes=(data.episodes||[]).filter(ep=>ep.episode_number>0);
-        if(!cancelled){setAnyplayEpisodes(episodes);setAnyplayEpisode(String(episodes[0]?.episode_number||1));}
-      }catch(e){if(!cancelled){setAnyplayEpisodes([]);setAnyplayError("Could not load episode list from TMDB: "+(e.message||"request failed"));}}
-      finally{if(!cancelled)setAnyplayEpisodesLoading(false);}
-    };
-    loadEpisodes();
-    return()=>{cancelled=true};
-  },[item.id,item.media_type,anyplaySeason]);
   const activateSource=(source)=>{setActiveSource(source);setShowTrailer(false);setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");setFakLoading(false);setYoutubeResults([]);setYoutubeError("");setYoutubeLoading(false);setArchiveResults([]);setArchiveError("");setArchiveLoading(false);};
   const [fakResults,setFakResults]=useState([]);
   const [fakLoading,setFakLoading]=useState(false);
