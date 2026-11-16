@@ -211,6 +211,9 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const [archiveResults,setArchiveResults]=useState([]);
   const [archiveLoading,setArchiveLoading]=useState(false);
   const [archiveError,setArchiveError]=useState("");
+  const [youtubeResults,setYoutubeResults]=useState([]);
+  const [youtubeLoading,setYoutubeLoading]=useState(false);
+  const [youtubeError,setYoutubeError]=useState("");
   const findFakTitle=async()=>{
     setFakLoading(true);setFakError("");setFakResults([]);setFakEpisodes([]);setFakPlayer(null);
     try{
@@ -256,6 +259,18 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
       finally{setFakLoading(false);}
     }
   };
+  const findYouTubeVideos=async()=>{
+    setYoutubeLoading(true);setYoutubeError("");setYoutubeResults([]);
+    try{
+      const suffix=item.media_type==="tv"?" full episodes":" full movie";
+      const response=await fetch("/api/youtube/search?q="+encodeURIComponent(titleOf(item)+suffix));
+      const payload=await response.json();
+      if(!response.ok||payload.error) throw new Error(payload.error?.message||"YouTube search failed.");
+      setYoutubeResults(payload.results||[]);
+      if(!(payload.results||[]).length)setYoutubeError("No embeddable long-form YouTube videos found. Try another title.");
+    }catch(e){setYoutubeError(e.message||"Unable to search YouTube.");}
+    finally{setYoutubeLoading(false);}
+  };
   const findArchiveStreams=async()=>{
     setArchiveLoading(true);setArchiveError("");setArchiveResults([]);
     try{
@@ -283,7 +298,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
             <h1>{titleOf(item)}</h1>
             <div className="meta"><span className="rating"><Star size={14} fill="currentColor"/> {scoreOf(item)}</span><span>{yearOf(item)||"—"}</span><span>{item.runtime?`${item.runtime} min`:item.number_of_seasons?`${item.number_of_seasons} Seasons`:"HD"}</span></div>
             <p>{item.overview || "No overview available."}</p>
-            <div className="hero-actions"><button className="primary-btn" onClick={findFakTitle}><Play size={17} fill="currentColor"/> Watch Full {item.media_type==="tv"?"Series":"Movie"}</button><button className="glass-btn" onClick={findArchiveStreams}>Free Legal Sources</button><button className="glass-btn" onClick={()=>setShowTrailer(true)} disabled={!trailer}><Play size={17} fill="currentColor"/> {trailer?"Play Trailer":"Trailer Unavailable"}</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button>{trailer&&<a className="glass-btn" href={`https://www.youtube.com/watch?v=${trailer.key}`} target="_blank" rel="noreferrer"><Play size={16}/> YouTube</a>}</div>
+            <div className="hero-actions"><button className="primary-btn" onClick={findFakTitle}><Play size={17} fill="currentColor"/> Watch Full {item.media_type==="tv"?"Series":"Movie"}</button><button className="glass-btn" onClick={findArchiveStreams}>Free Legal Sources</button><button className="glass-btn" onClick={findYouTubeVideos}><Play size={16}/> Search YouTube</button><button className="glass-btn" onClick={()=>setShowTrailer(true)} disabled={!trailer}><Play size={17} fill="currentColor"/> {trailer?"Play Trailer":"Trailer Unavailable"}</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>
             <div className="genres">{item.genres?.map(g=><span key={g.id}>{g.name}</span>)}</div>
           </div>
         </div>
@@ -296,6 +311,15 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
           {fakResults.length>0&&<div className="fak-results">{fakResults.map((result,index)=><button className="fak-result" key={result.id||index} onClick={()=>chooseFakResult(result)}><img src={result.image||""} alt="" loading="lazy"/><span><strong>{result.title}</strong><small>{result.year||"Year unavailable"} · {result.type} {result.views?"· "+result.views+" views":""}</small></span><ChevronRight size={18}/></button>)}</div>}
           {fakEpisodes.length>0&&<div className="fak-results">{fakEpisodes.map((episode,index)=><button className="fak-result fak-episode" key={episode.id||index} onClick={()=>openPlayer({kind:"episode",id:episode.id,title:episode.title||"Episode "+(episode.episode||index+1),detail:episode})}><span className="episode-number">{episode.episode||index+1}</span><span><strong>{episode.title||"Episode "+(episode.episode||index+1)}</strong><small>Season {episode.season||1} · Episode {episode.episode||index+1}</small></span><Play size={17}/></button>)}</div>}
           {fakPlayer&&<button className="primary-btn" onClick={()=>openPlayer(fakPlayer)}><Play size={16}/> Open separate player</button>}
+        </div>}
+        {(youtubeLoading||youtubeError||youtubeResults.length>0)&&<div className="detail-block youtube-block">
+          <div className="trailer-heading"><div><h3>YouTube · Play Inside ZXH</h3><span className="fak-powered">Official YouTube embedded player · no app redirect</span></div></div>
+          {youtubeLoading&&<p>Finding embeddable long-form videos…</p>}
+          {youtubeError&&<p className="fak-error">{youtubeError}</p>}
+          {youtubeResults.map((video,index)=><button className="fak-result" key={video.id+"-"+index} onClick={()=>openPlayer({kind:"youtube",source:"youtube",youtubeId:video.id,title:video.title,poster:video.thumbnail,channel:video.channel,duration:video.duration,description:video.description})}>
+            <img src={video.thumbnail||""} alt="" loading="lazy"/><span><strong>{video.title}</strong><small>{video.channel} · {video.duration||"Duration unavailable"} · YouTube embed</small></span><Play size={17}/>
+          </button>)}
+          <p className="youtube-note">Only videos that allow embedding can play here. Full-film availability and viewing rights depend on the uploader.</p>
         </div>}
         {(archiveLoading||archiveError||archiveResults.length>0)&&<div className="detail-block archive-block">
           <div className="trailer-heading"><div><h3>Free Legal Streaming Sources</h3><span className="fak-powered">Internet Archive · verified license metadata</span></div></div>
@@ -331,8 +355,9 @@ function PlayerScreen({entry,onBack}){
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Playback powered by the authorized Movies API integration."}</p></div>
     </section>
     <section className="player-shell">
-      {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : <iframe src={embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager"/>}
+      {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <iframe src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(entry.youtubeId)}?autoplay=1&rel=0&modestbranding=1`} title={entry.title||"ZXH OFFICIAL YouTube Player"} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen loading="eager"/> : <iframe src={embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager"/>}
     </section>
+    {entry.source==="youtube"&&<div className="player-info-row"><div><strong>Source</strong><span>YouTube embedded player</span></div><div><strong>Channel</strong><span>{entry.channel||"YouTube creator"}</span></div><div><strong>Duration</strong><span>{entry.duration||"Not provided"}</span></div></div>}
     {entry.source==="archive"&&<div className="player-info-row"><div><strong>Source</strong><span>Internet Archive</span></div><div><strong>Rights</strong><span>{entry.license||"See source item license"}</span></div><div><strong>Format</strong><span>{entry.format||"Browser video"}</span></div></div>}
     <div className="player-info-row">
       <div><strong>Available servers</strong><span>{streams.length?streams.length+" server option(s) supplied by the API":"Server switching is provided by the embedded player."}</span></div>
