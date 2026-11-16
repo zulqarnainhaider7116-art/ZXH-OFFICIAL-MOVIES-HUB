@@ -46,24 +46,31 @@ function App(){
   const [youtubeSearchLoading,setYoutubeSearchLoading] = useState(false);
   const [installPromptEvent,setInstallPromptEvent]=useState(null);
   const [showInstallPrompt,setShowInstallPrompt]=useState(false);
+  const [installHelpMessage,setInstallHelpMessage]=useState("");
 
   useEffect(()=>{
     let timer;
     const standalone=window.matchMedia?.("(display-mode: standalone)")?.matches||window.navigator.standalone===true;
+    const alreadyInstalled=standalone||localStorage.getItem("pwaInstalled")==="true";
+    const dismissed=localStorage.getItem("pwaInstallPromptDismissed")==="true";
+    if(!alreadyInstalled&&!dismissed){
+      timer=window.setTimeout(()=>setShowInstallPrompt(true),1500);
+    }
     const onBeforeInstall=e=>{
       e.preventDefault();
       setInstallPromptEvent(e);
-      if(!standalone&&!localStorage.getItem("pwaInstallPromptDismissed")&&!localStorage.getItem("pwaInstalled")){
-        timer=window.setTimeout(()=>setShowInstallPrompt(true),1500);
-      }
     };
     const onInstalled=()=>{
       localStorage.setItem("pwaInstalled","true");
       setShowInstallPrompt(false);
       setInstallPromptEvent(null);
+      setInstallHelpMessage("");
     };
     window.addEventListener("beforeinstallprompt",onBeforeInstall);
     window.addEventListener("appinstalled",onInstalled);
+    if("serviceWorker" in navigator){
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});
+    }
     return()=>{
       window.clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt",onBeforeInstall);
@@ -75,11 +82,25 @@ function App(){
     setShowInstallPrompt(false);
   };
   const installApp=async()=>{
-    if(!installPromptEvent)return;
-    installPromptEvent.prompt();
-    const choice=await installPromptEvent.userChoice;
-    if(choice?.outcome==="accepted")localStorage.setItem("pwaInstalled","true");
-    else localStorage.setItem("pwaInstallPromptDismissed","true");
+    if(!installPromptEvent){
+      const ua=navigator.userAgent||"";
+      if(/iphone|ipad|ipod/i.test(ua)){
+        setInstallHelpMessage("On iPhone/iPad: tap the Share button, choose “Add to Home Screen”, then tap Add.");
+      }else if(/android/i.test(ua)){
+        setInstallHelpMessage("Open your browser menu (⋮) and choose “Install app” or “Add to Home screen”.");
+      }else{
+        setInstallHelpMessage("Use your browser menu and choose “Install ZXH OFFICIAL XURVYNA” or “Install app”.");
+      }
+      return;
+    }
+    try{
+      installPromptEvent.prompt();
+      const choice=await installPromptEvent.userChoice;
+      if(choice?.outcome==="accepted")localStorage.setItem("pwaInstalled","true");
+      else localStorage.setItem("pwaInstallPromptDismissed","true");
+    }catch(error){
+      setInstallHelpMessage("Open your browser menu and choose “Install app” or “Add to Home screen”.");
+    }
     setShowInstallPrompt(false);
     setInstallPromptEvent(null);
   };
@@ -259,19 +280,18 @@ function App(){
     }
     {selected && <Details item={selected} close={()=>setSelected(null)} toggleWatch={toggleWatch} saved={isSaved(selected.id)} openDetails={openDetails} openPlayer={openPlayer}/>}
     {page!=="player" && <MobileNav page={page} go={go}/>}
-    {showInstallPrompt&&installPromptEvent&&<div className="install-overlay" role="dialog" aria-modal="true" aria-labelledby="install-title">
+    <div id="installPromptOverlay" className="install-overlay" hidden={!showInstallPrompt} role="dialog" aria-modal="true" aria-labelledby="install-title">
       <div className="install-card">
-        <button className="install-close" type="button" onClick={dismissInstallPrompt} aria-label="Close install popup"><X size={18}/></button>
-        <div className="install-icon"><img src="/assets/xurvyna-app-icon.svg" alt="ZXH OFFICIAL XURVYNA app icon"/></div>
-        <span className="install-eyebrow">YOUR CINEMA, ONE TAP AWAY</span>
-        <h2 id="install-title">Install ZXH OFFICIAL</h2>
-        <p>Add this app to your home screen for quick access and offline use.</p>
-        <div className="install-actions">
-          <button type="button" className="install-later" onClick={dismissInstallPrompt}>Not Now</button>
-          <button type="button" className="install-now" onClick={installApp}>Install App <span>↗</span></button>
-        </div>
+        <button id="installClose" className="install-close" type="button" onClick={dismissInstallPrompt} aria-label="Close install popup">×</button>
+        <img src="/assets/xurvyna-app-icon-512.jpg" alt="ZXH Official Xurvyna" className="install-icon"/>
+        <span className="kicker">ZXH / APP EXPERIENCE</span>
+        <h2 id="install-title">KEEP ZXH<br/><i>WITH YOU.</i></h2>
+        <p>Add ZXH OFFICIAL XURVYNA to your home screen for a clean, app-like experience with faster access.</p>
+        {installHelpMessage&&<p className="install-help" role="status">{installHelpMessage}</p>}
+        <button id="installBtn" type="button" className="btn dark install-main" onClick={installApp}>INSTALL APP <b>↓</b></button>
+        <button id="installLater" type="button" className="install-later" onClick={dismissInstallPrompt}>NOT NOW</button>
       </div>
-    </div>}
+    </div>
   </div>
 }
 
