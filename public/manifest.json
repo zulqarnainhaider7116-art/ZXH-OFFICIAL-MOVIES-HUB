@@ -1,0 +1,18 @@
+{
+  "name": "ZXH OFFICIAL XURVYNA",
+  "short_name": "XURVYNA",
+  "description": "ZXH OFFICIAL movies, series and live TV.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0b0e",
+  "theme_color": "#0a0b0e",
+  "icons": [
+    {
+      "src": "/assets/xurvyna-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
