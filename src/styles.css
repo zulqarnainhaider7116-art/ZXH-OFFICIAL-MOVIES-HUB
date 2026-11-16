@@ -174,3 +174,6 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 .mobile-menu .country-open-btn{justify-content:center;margin:4px 0 8px;border:1px solid #8295ff55;background:#8295ff18;color:#e0e5ff;font-weight:800}
 .menu-credit{display:block;text-align:center;padding:18px 0 8px;letter-spacing:1px}
 @media(max-width:700px){.content:not(.home-content){padding:100px 17px 110px}.category-page-head{padding-top:10px}.content:not(.home-content) .category-page-head{padding-top:10px}}
+
+/* Keep the full navigation drawer reachable on wide desktop screens too */
+.menu-btn{display:grid!important;place-items:center;flex:0 0 44px}
