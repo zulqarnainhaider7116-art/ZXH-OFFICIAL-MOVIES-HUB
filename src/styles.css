@@ -554,3 +554,12 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 .audio-language-select option{background:#171923;color:#fff}
 .audio-language-status{flex:1 1 100%;margin:0}
 @media(max-width:600px){.audio-language-panel{align-items:stretch;gap:12px;padding:14px}.audio-language-select{min-width:100%}.audio-language-heading small{font-size:10px}}
+
+/* ZXH series season and episode picker */
+.series-episode-picker{display:flex;align-items:end;gap:10px;flex-wrap:wrap;width:100%;margin-top:10px;padding:13px 14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.045);backdrop-filter:blur(14px)}
+.series-episode-picker label{display:grid;gap:6px;min-width:145px;flex:1;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:1.2px}
+.series-episode-picker select{width:100%;height:42px;padding:0 12px;border:1px solid var(--line);border-radius:11px;background:#171b28;color:var(--text);font-size:12px;outline:none}
+.series-episode-picker option{background:#171b28;color:#fff}
+.series-episode-picker>small{width:100%;color:var(--muted);font-size:10px}
+.series-episode-picker .series-picker-error{color:#ff9b9b}
+@media(max-width:600px){.series-episode-picker{gap:8px;padding:11px}.series-episode-picker label{min-width:calc(50% - 4px)}}
