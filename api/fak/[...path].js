@@ -62,13 +62,29 @@ export default async function handler(req, res) {
     });
 
     const contentType = upstream.headers.get("content-type") || "";
-    if (isEmbed || contentType.includes("text/html")) {
+    if (isEmbed) {
       const html = await upstream.text();
       res.status(upstream.status);
       res.setHeader("Content-Type", contentType || "text/html; charset=utf-8");
       res.setHeader("Cache-Control", "no-store");
       res.setHeader("X-Content-Type-Options", "nosniff");
       return res.send(html);
+    }
+
+    if (contentType.includes("text/html")) {
+      const body = await upstream.text();
+      return res.status(502).json({
+        api: "movies-api/v1",
+        version: "6.0",
+        integration: BRAND,
+        error: {
+          code: "upstream_html_response",
+          message: "The movie provider returned an HTML page instead of JSON. Check provider access or Cloudflare protection.",
+          upstream_status: upstream.status,
+          content_type: contentType,
+          response_preview: body.slice(0, 180)
+        }
+      });
     }
 
     let payload;
