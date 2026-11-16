@@ -158,7 +158,6 @@ function App(){
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
           {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}
-          {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
           {Object.values(sectionData).every(a=>!a?.length) && <Empty page={page}/>}
         </main>
         <Footer/>
@@ -387,7 +386,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
             <h1>{titleOf(item)}</h1>
             <div className="meta"><span className="rating"><Star size={14} fill="currentColor"/> {scoreOf(item)}</span><span>{yearOf(item)||"—"}</span><span>{item.runtime?`${item.runtime} min`:item.number_of_seasons?`${item.number_of_seasons} Seasons`:"HD"}</span></div>
             <p>{item.overview || "No overview available."}</p>
-            <div className="hero-actions"><button className="primary-btn" onClick={watchNow} disabled={autoWatchLoading}><Play size={17} fill="currentColor"/> {autoWatchLoading?"Finding best stream…":"WATCH"}</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>{autoWatchError&&<p className="fak-error" role="status">{autoWatchError}</p>}
+            <div className="hero-actions"><button className="primary-btn" onClick={watchNow} disabled={autoWatchLoading}><Play size={17} fill="currentColor"/> {autoWatchLoading?"Finding best stream…":"WATCH"}</button>{trailer&&<button className="glass-btn" onClick={()=>{setActiveSource("trailer");setShowTrailer(true);}}><Play size={16}/> Trailer</button>}<button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>{autoWatchError&&<p className="fak-error" role="status">{autoWatchError}</p>}
             <div className="genres">{item.genres?.map(g=><span key={g.id}>{g.name}</span>)}</div>
           </div>
         </div>
@@ -480,28 +479,31 @@ function YouTubeAutoPlayer({entry}){
 
 function PlayerScreen({entry,onBack}){
   const detail=entry.detail||{};
+  const playerShellRef=useRef(null);
+  const [isFullscreen,setIsFullscreen]=useState(false);
+  useEffect(()=>{const sync=()=>{const active=!!document.fullscreenElement;setIsFullscreen(active);if(!active){try{window.screen?.orientation?.unlock?.()}catch{}}};document.addEventListener("fullscreenchange",sync);return()=>document.removeEventListener("fullscreenchange",sync)},[]);
+  const togglePlayerFullscreen=async()=>{try{if(document.fullscreenElement){await document.exitFullscreen();return;}const el=playerShellRef.current;if(!el)return;const request=el.requestFullscreen||el.webkitRequestFullscreen;if(!request)throw new Error("Fullscreen is not supported by this browser.");await request.call(el);try{await window.screen?.orientation?.lock?.("landscape")}catch{}}catch(e){console.warn("Fullscreen:",e)}};
   const streams=Array.isArray(detail.streams)?detail.streams.filter(s=>s&&s.url):[];
   const downloads=Array.isArray(detail.downloads)?detail.downloads.filter(d=>d&&d.url):[];
   const poster=detail.poster||entry.poster||"";
   const embedPath="/api/fak/embed/"+entry.kind+"/"+encodeURIComponent(entry.id);
   return <main className="player-page">
     <div className="player-topbar">
-      <button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button>
+      <div className="player-controls"><button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button><button className="glass-btn" onClick={togglePlayerFullscreen}><span>{isFullscreen?"Exit Fullscreen":"Fullscreen"}</span></button></div>
       <span className="fak-powered">ZXH-OFFICIAL • MOVIES PLAYER</span>
     </div>
     <section className="player-heading">
       {poster&&<img src={poster} alt="" loading="lazy"/>}
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Playback powered by the authorized Movies API integration."}</p></div>
     </section>
-    <section className="player-shell">
+    <section className="player-shell" ref={playerShellRef}>
       {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe src={embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager"/>}
     </section>
-    {entry.source==="youtube"&&<div className="player-info-row"><div><strong>Source</strong><span>YouTube embedded player · automatic fallback enabled</span></div><div><strong>Channel</strong><span>{entry.channel||"YouTube creator"}</span></div><div><strong>Duration</strong><span>{entry.duration||"Not provided"}</span></div></div>}
-    {entry.source==="archive"&&<div className="player-info-row"><div><strong>Source</strong><span>Internet Archive</span></div><div><strong>Rights</strong><span>{entry.license||"See source item license"}</span></div><div><strong>Format</strong><span>{entry.format||"Browser video"}</span></div></div>}
-    <div className="player-info-row">
+    {entry.source==="youtube"&&<p className="youtube-note">YouTube video · played inside ZXH. YouTube attribution and player controls are retained.</p>}
+    {entry.source!=="youtube"&&entry.source!=="archive"&&<div className="player-info-row">
       <div><strong>Available servers</strong><span>{streams.length?streams.length+" server option(s) supplied by the API":"Server switching is provided by the embedded player."}</span></div>
       <div><strong>Downloads</strong><span>{downloads.length?downloads.length+" option(s) supplied by the API":"No separate download options returned."}</span></div>
-    </div>
+    </div>}
     {streams.length>0&&<section className="player-data-block"><h2>API stream data</h2><div className="player-stream-list">{streams.map((s,i)=><div className="player-stream" key={s.url||i}><span>{s.name||"Server "+(i+1)}</span><small>{s.kind||"Stream"}{s.playable===false?" · unavailable":" · API listed"}</small></div>)}</div></section>}
     {downloads.length>0&&<section className="player-data-block"><h2>Available downloads</h2><div className="player-download-list">{downloads.map((d,i)=><a key={d.url||i} href={d.url} target="_blank" rel="noreferrer">{d.label||"Download "+(i+1)} <ChevronRight size={15}/></a>)}</div></section>}
     <p className="player-credit">ZXH-OFFICIAL · ZULQARNAIN X HAIDER</p>
