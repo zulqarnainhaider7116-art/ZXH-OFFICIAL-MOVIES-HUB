@@ -470,3 +470,53 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
  .player-server-picker{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center}
  .player-server-picker select{width:100%;max-width:none}
 }
+
+
+/* ZXH branded, touch-friendly playback option switcher */
+.player-server-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  margin:0 0 18px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(255,255,255,.035);
+}
+.player-server-options button{
+  min-width:92px;
+  min-height:42px;
+  padding:0 15px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  font-size:11px;
+  font-weight:850;
+  letter-spacing:.5px;
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+.player-server-options button.active{
+  color:#fff;
+  border-color:#8295ff;
+  background:linear-gradient(135deg,#596fd0,#8295ff);
+  box-shadow:0 5px 18px rgba(100,120,220,.25);
+}
+.player-server-options button:focus-visible{outline:2px solid #aab7ff;outline-offset:2px}
+@media(max-width:700px){
+  .player-server-options{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+    margin:0 0 14px;
+    padding:10px;
+  }
+  .player-server-options button{
+    width:100%;
+    min-width:0;
+    min-height:46px;
+    font-size:12px;
+  }
+}
