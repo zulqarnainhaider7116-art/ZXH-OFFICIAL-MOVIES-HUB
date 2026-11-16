@@ -717,7 +717,7 @@ function PlayerScreen({entry,onBack}){
       <div className="player-controls"><button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button><button className="glass-btn" onClick={togglePlayerFullscreen}><span>{isFullscreen?"Exit Fullscreen":"Fullscreen"}</span></button></div>
       <span className="fak-powered">ZXH OFFICIAL PLAYER</span>
     </div>
-    {entry.source==="anyplay"&&entry.anyplayServers?.length>1&&<div className="player-server-options" aria-label="Playback options">{entry.anyplayServers.map((server,index)=><button type="button" key={server.id} className={activeAnyplayServer===String(server.id)?"active":""} aria-pressed={activeAnyplayServer===String(server.id)} onClick={()=>setActiveAnyplayServer(String(server.id))}>OPTION {index+1}</button>)}</div>}
+    {entry.source==="anyplay"&&entry.anyplayServers?.length>1&&<div className="player-server-options" aria-label="Playback options">{entry.anyplayServers.map((server,index)=><button type="button" key={server.id} className={activeAnyplayServer===String(server.id)?"active":""} aria-pressed={activeAnyplayServer===String(server.id)} onClick={()=>setActiveAnyplayServer(String(server.id))}>{server.name||("SERVER "+(index+1))}</button>)}</div>}
     <section className="player-heading">
       {poster&&<img src={poster} alt="" loading="lazy"/>}
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Enjoy your selection in the ZXH OFFICIAL player."}</p></div>
