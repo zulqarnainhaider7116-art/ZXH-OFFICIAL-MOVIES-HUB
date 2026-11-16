@@ -305,6 +305,73 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 }
 
 
+
+
+/* ZXH desktop/tablet navigation drawer readability */
+@media(min-width:701px){
+  .mobile-menu{
+    width:min(390px,calc(100vw - 40px))!important;
+    max-height:calc(100dvh - 24px)!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    padding:22px!important;
+    gap:6px!important;
+    background:#11151f!important;
+    color:#f7f8fc!important;
+    border:1px solid rgba(255,255,255,.18)!important;
+    border-radius:22px!important;
+    box-shadow:0 24px 75px rgba(0,0,0,.72)!important;
+  }
+  .mobile-menu>button{
+    width:100%;
+    min-height:48px;
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:13px;
+    padding:13px 15px!important;
+    color:#f1f4fa!important;
+    font-size:14px!important;
+    font-weight:650!important;
+    line-height:1.4;
+    text-align:left;
+    border:1px solid transparent;
+    border-radius:12px;
+  }
+  .mobile-menu>button svg{flex:0 0 19px;color:#d7dfed}
+  .mobile-menu>button:hover,.mobile-menu>button:focus-visible{
+    color:#fff!important;
+    background:rgba(255,255,255,.12)!important;
+    border-color:rgba(255,255,255,.14);
+    outline:none;
+  }
+  .menu-profile{gap:13px;padding:10px 4px 20px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.14)}
+  .menu-profile strong{color:#fff;font-size:16px;font-weight:800}
+  .menu-profile small{color:#c6cfdd!important;font-size:12px;line-height:1.5}
+  .menu-profile>button{flex:0 0 38px;width:38px;height:38px;color:#fff;background:rgba(255,255,255,.12)}
+  .menu-section-label{
+    color:#b9c6da!important;
+    font-size:10px!important;
+    font-weight:900;
+    letter-spacing:1.6px;
+    padding:17px 10px 7px!important;
+  }
+  .country-picker{gap:9px;padding:10px;color:#e8edf6!important;font-size:12px!important}
+  .country-picker select{
+    width:100%;height:46px;padding:0 13px;
+    color:#fff!important;background:#252c3a!important;
+    border:1px solid rgba(255,255,255,.22)!important;
+    border-radius:12px;font-size:14px;
+  }
+  .country-picker option{background:#171d29!important;color:#fff!important}
+  .mobile-menu .country-open-btn{
+    justify-content:center;
+    color:#fff!important;background:#39466b!important;
+    border:1px solid #687dbb!important;font-weight:800!important;
+  }
+  .menu-credit{display:block;color:#c2ccdc!important;font-size:10px;text-align:center;letter-spacing:1px;padding:20px 0 8px}
+}
+
 /* ZXH final navigation alignment + player safe spacing */
 .header{z-index:120}
 .header-main{min-width:0}
