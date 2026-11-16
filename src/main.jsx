@@ -158,7 +158,8 @@ function App(){
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
           {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}
-          {Object.values(sectionData).every(a=>!a?.length) && <Empty page={page}/>}
+          {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
+          {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && <Empty page={page}/>}
         </main>
         <Footer/>
         </>}
@@ -481,8 +482,9 @@ function PlayerScreen({entry,onBack}){
   const detail=entry.detail||{};
   const playerShellRef=useRef(null);
   const [isFullscreen,setIsFullscreen]=useState(false);
-  useEffect(()=>{const sync=()=>{const active=!!document.fullscreenElement;setIsFullscreen(active);if(!active){try{window.screen?.orientation?.unlock?.()}catch{}}};document.addEventListener("fullscreenchange",sync);return()=>document.removeEventListener("fullscreenchange",sync)},[]);
-  const togglePlayerFullscreen=async()=>{try{if(document.fullscreenElement){await document.exitFullscreen();return;}const el=playerShellRef.current;if(!el)return;const request=el.requestFullscreen||el.webkitRequestFullscreen;if(!request)throw new Error("Fullscreen is not supported by this browser.");await request.call(el);try{await window.screen?.orientation?.lock?.("landscape")}catch{}}catch(e){console.warn("Fullscreen:",e)}};
+  const [forceLandscape,setForceLandscape]=useState(false);
+  useEffect(()=>{const sync=()=>{const active=!!document.fullscreenElement;setIsFullscreen(active);if(!active){setForceLandscape(false);try{window.screen?.orientation?.unlock?.()}catch{}}};document.addEventListener("fullscreenchange",sync);return()=>document.removeEventListener("fullscreenchange",sync)},[]);
+  const togglePlayerFullscreen=async()=>{try{if(document.fullscreenElement){await document.exitFullscreen();return;}const el=playerShellRef.current;if(!el)return;const request=el.requestFullscreen||el.webkitRequestFullscreen;if(!request)throw new Error("Fullscreen is not supported by this browser.");await request.call(el,{navigationUI:"hide"});let locked=false;try{if(window.screen?.orientation?.lock){await window.screen.orientation.lock("landscape");locked=true;}}catch{}setForceLandscape(!locked && window.matchMedia("(orientation: portrait)").matches);}catch(e){console.warn("Fullscreen:",e);setForceLandscape(true)}};
   const streams=Array.isArray(detail.streams)?detail.streams.filter(s=>s&&s.url):[];
   const downloads=Array.isArray(detail.downloads)?detail.downloads.filter(d=>d&&d.url):[];
   const poster=detail.poster||entry.poster||"";
@@ -496,7 +498,7 @@ function PlayerScreen({entry,onBack}){
       {poster&&<img src={poster} alt="" loading="lazy"/>}
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Playback powered by the authorized Movies API integration."}</p></div>
     </section>
-    <section className="player-shell" ref={playerShellRef}>
+    <section className={"player-shell"+(forceLandscape?" force-landscape":"")} ref={playerShellRef}>
       {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe src={embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager"/>}
     </section>
     {entry.source==="youtube"&&<p className="youtube-note">YouTube video · played inside ZXH. YouTube attribution and player controls are retained.</p>}
