@@ -531,7 +531,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
           
         </div>
         {activeSource==="fak"&&(fakLoading||fakError||fakResults.length>0||fakEpisodes.length>0||fakPlayer)&&<div className="detail-block fak-block">
-          <div className="trailer-heading"><div><h3>Watch with ZXH-OFFICIAL LAB CREW API</h3><span className="fak-powered">Powered by ZXH-OFFICIAL LAB CREW</span></div>{fakResults.length>0&&<button className="glass-btn" onClick={()=>{setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");}}>Reset</button>}</div>
+          <div className="trailer-heading"><div><h3>ZXH OFFICIAL PLAYER</h3><span className="fak-powered">Premium playback experience</span></div>{fakResults.length>0&&<button className="glass-btn" onClick={()=>{setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");}}>Reset</button>}</div>
           {fakLoading&&<p>Searching available sources…</p>}
           {fakError&&<p className="fak-error">{fakError}</p>}
           {fakResults.length>0&&<div className="fak-results">{fakResults.map((result,index)=><button className="fak-result" key={result.id||index} onClick={()=>chooseFakResult(result)}><img src={result.image||""} alt="" loading="lazy"/><span><strong>{result.title}</strong><small>{result.year||"Year unavailable"} · {result.type} {result.views?"· "+result.views+" views":""}</small></span><ChevronRight size={18}/></button>)}</div>}
@@ -638,12 +638,12 @@ function PlayerScreen({entry,onBack}){
     {entry.source==="anyplay"&&entry.anyplayServers?.length>1&&<div className="player-server-options" aria-label="Playback options">{entry.anyplayServers.map((server,index)=><button type="button" key={server.id} className={activeAnyplayServer===String(server.id)?"active":""} aria-pressed={activeAnyplayServer===String(server.id)} onClick={()=>setActiveAnyplayServer(String(server.id))}>OPTION {index+1}</button>)}</div>}
     <section className="player-heading">
       {poster&&<img src={poster} alt="" loading="lazy"/>}
-      <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Playback powered by the authorized Movies API integration."}</p></div>
+      <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Enjoy your selection in the ZXH OFFICIAL player."}</p></div>
     </section>
     <section className={"player-shell"+(forceLandscape?" force-landscape":"")} ref={playerShellRef}>
       {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe key={entry.source==="anyplay"?anyplayEmbedUrl:embedPath} src={entry.source==="anyplay"?anyplayEmbedUrl:embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager" referrerPolicy="strict-origin-when-cross-origin"/>}
     </section>
-    {entry.source==="youtube"&&<p className="youtube-note">YouTube video · played inside ZXH. YouTube attribution and player controls are retained.</p>}
+    {entry.source==="youtube"&&<p className="youtube-note">Now playing inside ZXH OFFICIAL.</p>}
     {entry.source!=="youtube"&&entry.source!=="archive"&&<div className="player-info-row">
       <div><strong>Available servers</strong><span>{streams.length?streams.length+" playback option(s)":"More options may be available inside the player."}</span></div>
       <div><strong>Downloads</strong><span>{downloads.length?downloads.length+" options":"No separate downloads available."}</span></div>
