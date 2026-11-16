@@ -36,6 +36,8 @@ function App(){
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState("");
   const [selected,setSelected] = useState(null);
+  const [player,setPlayer] = useState(null);
+  const [playerBackPage,setPlayerBackPage] = useState("home");
   const [search,setSearch] = useState("");
   const [query,setQuery] = useState("");
   const [watchlist,setWatchlist] = useState(()=>JSON.parse(localStorage.getItem("zxh-watchlist")||"[]"));
@@ -89,7 +91,10 @@ function App(){
     return ()=>{document.body.style.overflow="";window.removeEventListener("keydown",onKey)};
   },[selected]);
 
-  const go = key => { setPage(key); setMobileOpen(false); setSearch(""); setQuery(""); window.scrollTo({top:0,behavior:"smooth"}); };
+  const go = key => { setPage(key); setMobileOpen(false); setSearch(""); setQuery(""); setPlayer(null); window.scrollTo({top:0,behavior:"smooth"}); };
+
+  const openPlayer = entry => { setPlayerBackPage(page === "player" ? playerBackPage : page); setPlayer(entry); setSelected(null); setPage("player"); window.scrollTo({top:0,behavior:"smooth"}); };
+  const closePlayer = () => { setPlayer(null); setPage(playerBackPage || "home"); window.scrollTo({top:0,behavior:"smooth"}); };
 
   const openDetails=async(item)=>{
     try{
@@ -126,6 +131,7 @@ function App(){
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen"><LoaderCircle className="spin" size={34}/><span>Loading cinema…</span></div> :
       <>
+        {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : <>
         {page==="home" && hero && <Hero item={hero} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved(hero.id)}/>}
         <main className={page==="home" ? "content home-content":"content"}>
           {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
@@ -134,11 +140,12 @@ function App(){
           {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}
           {Object.values(sectionData).every(a=>!a?.length) && <Empty page={page}/>}
         </main>
+        <Footer/>
+        </>}
       </>
     }
-    <Footer/>
-    {selected && <Details item={selected} close={()=>setSelected(null)} toggleWatch={toggleWatch} saved={isSaved(selected.id)} openDetails={openDetails}/>}
-    <MobileNav page={page} go={go}/>
+    {selected && <Details item={selected} close={()=>setSelected(null)} toggleWatch={toggleWatch} saved={isSaved(selected.id)} openDetails={openDetails} openPlayer={openPlayer}/>}
+    {page!=="player" && <MobileNav page={page} go={go}/ >}
   </div>
 }
 
@@ -194,7 +201,7 @@ function MovieCard({item,openDetails}){
 function PageTitle({icon,title,text}){return <div className="page-title"><div className="title-icon">{icon}</div><div><span className="eyebrow">YOUR SPACE</span><h1>{title}</h1><p>{text}</p></div></div>}
 function Empty({page}){return <div className="empty"><Bookmark size={34}/><h3>{page==="search"?"No titles found":"Nothing here yet"}</h3><p>Try another collection or search for a different title.</p></div>}
 
-function Details({item,close,toggleWatch,saved,openDetails}){
+function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const [showTrailer,setShowTrailer]=useState(false);
   const [fakResults,setFakResults]=useState([]);
   const [fakLoading,setFakLoading]=useState(false);
@@ -204,13 +211,15 @@ function Details({item,close,toggleWatch,saved,openDetails}){
   const findFakTitle=async()=>{
     setFakLoading(true);setFakError("");setFakResults([]);setFakEpisodes([]);setFakPlayer(null);
     try{
-      const kind=item.media_type==="tv"?"series":"movie";
+      const kind=item.media_type==="tv"?"all":"movie";
       const response=await fetch("/api/fak/search?q="+encodeURIComponent(titleOf(item))+"&type="+kind);
       const contentType=response.headers.get("content-type")||"";
       if(!contentType.includes("application/json")) throw new Error("Movie API route is not responding with JSON yet. Please retry after deployment.");
       const payload=await response.json();
       if(!response.ok||payload.error) throw new Error(payload.error?.message||"ZXH-OFFICIAL LAB CREW API search failed.");
-      const results=payload.data?.results||[];setFakResults(results);
+      const allResults=payload.data?.results||[];
+      const results=item.media_type==="tv"?allResults.filter(x=>x.type==="series"||x.type==="anime"):allResults.filter(x=>x.type==="movie");
+      setFakResults(results);
       if(!results.length)setFakError("No matching title was found in ZXH-OFFICIAL LAB CREW API.");
     }catch(e){setFakError(e.message||"Unable to search ZXH-OFFICIAL LAB CREW API.");}
     finally{setFakLoading(false);}
@@ -225,11 +234,24 @@ function Details({item,close,toggleWatch,saved,openDetails}){
         if(!contentType.includes("application/json")) throw new Error("Movie API route is not responding with JSON yet. Please retry after deployment.");
         const payload=await response.json();
         if(!response.ok||payload.error) throw new Error(payload.error?.message||"Could not load series episodes.");
-        const episodes=payload.data?.episodes||[];setFakEpisodes(episodes);setFakPlayer(null);
+        const detail=payload.data||payload.result||payload;
+        const episodes=detail.episodes||detail.data?.episodes||[];setFakEpisodes(episodes);setFakPlayer(null);
         if(!episodes.length)setFakError("No episodes are listed for this series.");
       }catch(e){setFakError(e.message||"Unable to load episodes.");}
       finally{setFakLoading(false);}
-    }else{setFakEpisodes([]);setFakPlayer({kind:"movie",id:result.id,title:result.title});}
+    }else{
+      setFakLoading(true);
+      try{
+        const response=await fetch("/api/fak/movies/"+encodeURIComponent(result.id));
+        const contentType=response.headers.get("content-type")||"";
+        if(!contentType.includes("application/json")) throw new Error("Movie details endpoint did not return JSON.");
+        const payload=await response.json();
+        if(!response.ok||payload.error) throw new Error(payload.error?.message||"Could not load movie details.");
+        const detail=payload.data||payload.result||payload;
+        openPlayer({kind:"movie",id:result.id,title:detail.title||result.title,detail,poster:detail.poster||result.image||""});
+      }catch(e){setFakError(e.message||"Unable to load movie details.");}
+      finally{setFakLoading(false);}
+    }
   };
   const trailer=item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Trailer"&&v.key)
     || item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Teaser"&&v.key);
@@ -258,8 +280,8 @@ function Details({item,close,toggleWatch,saved,openDetails}){
           {fakLoading&&<p>Searching available sources…</p>}
           {fakError&&<p className="fak-error">{fakError}</p>}
           {fakResults.length>0&&<div className="fak-results">{fakResults.map((result,index)=><button className="fak-result" key={result.id||index} onClick={()=>chooseFakResult(result)}><img src={result.image||""} alt="" loading="lazy"/><span><strong>{result.title}</strong><small>{result.year||"Year unavailable"} · {result.type} {result.views?"· "+result.views+" views":""}</small></span><ChevronRight size={18}/></button>)}</div>}
-          {fakEpisodes.length>0&&<div className="fak-results">{fakEpisodes.map((episode,index)=><button className="fak-result fak-episode" key={episode.id||index} onClick={()=>setFakPlayer({kind:"episode",id:episode.id,title:episode.title||"Episode "+(episode.episode||index+1)})}><span className="episode-number">{episode.episode||index+1}</span><span><strong>{episode.title||"Episode "+(episode.episode||index+1)}</strong><small>Season {episode.season||1} · Episode {episode.episode||index+1}</small></span><Play size={17}/></button>)}</div>}
-          {fakPlayer&&<div className="fak-player-wrap"><div className="trailer-heading"><h3>{fakPlayer.title||titleOf(item)}</h3><button className="glass-btn" onClick={()=>setFakPlayer(null)}>Close Player</button></div><div className="fak-player-frame"><iframe src={"/api/fak/embed/"+fakPlayer.kind+"/"+encodeURIComponent(fakPlayer.id)} title={fakPlayer.title||titleOf(item)} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="lazy"/></div><span className="fak-powered">Powered by ZXH-OFFICIAL LAB CREW</span></div>}
+          {fakEpisodes.length>0&&<div className="fak-results">{fakEpisodes.map((episode,index)=><button className="fak-result fak-episode" key={episode.id||index} onClick={()=>openPlayer({kind:"episode",id:episode.id,title:episode.title||"Episode "+(episode.episode||index+1),detail:episode})}><span className="episode-number">{episode.episode||index+1}</span><span><strong>{episode.title||"Episode "+(episode.episode||index+1)}</strong><small>Season {episode.season||1} · Episode {episode.episode||index+1}</small></span><Play size={17}/></button>)}</div>}
+          {fakPlayer&&<button className="primary-btn" onClick={()=>openPlayer(fakPlayer)}><Play size={16}/> Open separate player</button>}
         </div>}
         {showTrailer&&trailer&&<div className="detail-block trailer-block"><div className="trailer-heading"><h3>Now Playing · {titleOf(item)} Trailer</h3><button className="glass-btn" onClick={()=>setShowTrailer(false)}><X size={15}/> Close</button></div><div className="trailer-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0&modestbranding=1`} title={`${titleOf(item)} trailer`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen/></div></div>}
         <div className="detail-block"><h3>About this title</h3><p>{item.overview || "No description available."}</p></div>
@@ -268,6 +290,35 @@ function Details({item,close,toggleWatch,saved,openDetails}){
       </div>
     </div>
   </div>
+}
+
+
+function PlayerScreen({entry,onBack}){
+  const detail=entry.detail||{};
+  const streams=Array.isArray(detail.streams)?detail.streams.filter(s=>s&&s.url):[];
+  const downloads=Array.isArray(detail.downloads)?detail.downloads.filter(d=>d&&d.url):[];
+  const poster=detail.poster||entry.poster||"";
+  const embedPath="/api/fak/embed/"+entry.kind+"/"+encodeURIComponent(entry.id);
+  return <main className="player-page">
+    <div className="player-topbar">
+      <button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button>
+      <span className="fak-powered">ZXH-OFFICIAL • MOVIES PLAYER</span>
+    </div>
+    <section className="player-heading">
+      {poster&&<img src={poster} alt="" loading="lazy"/>}
+      <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Playback powered by the authorized Movies API integration."}</p></div>
+    </section>
+    <section className="player-shell">
+      <iframe src={embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager"/>
+    </section>
+    <div className="player-info-row">
+      <div><strong>Available servers</strong><span>{streams.length?streams.length+" server option(s) supplied by the API":"Server switching is provided by the embedded player."}</span></div>
+      <div><strong>Downloads</strong><span>{downloads.length?downloads.length+" option(s) supplied by the API":"No separate download options returned."}</span></div>
+    </div>
+    {streams.length>0&&<section className="player-data-block"><h2>API stream data</h2><div className="player-stream-list">{streams.map((s,i)=><div className="player-stream" key={s.url||i}><span>{s.name||"Server "+(i+1)}</span><small>{s.kind||"Stream"}{s.playable===false?" · unavailable":" · API listed"}</small></div>)}</div></section>}
+    {downloads.length>0&&<section className="player-data-block"><h2>Available downloads</h2><div className="player-download-list">{downloads.map((d,i)=><a key={d.url||i} href={d.url} target="_blank" rel="noreferrer">{d.label||"Download "+(i+1)} <ChevronRight size={15}/></a>)}</div></section>}
+    <p className="player-credit">ZXH-OFFICIAL · ZULQARNAIN X HAIDER</p>
+  </main>;
 }
 
 function MobileNav({page,go}){
