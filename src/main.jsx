@@ -95,7 +95,7 @@ function App(){
     return ()=>{document.body.style.overflow="";window.removeEventListener("keydown",onKey)};
   },[selected]);
 
-  const go = key => { setPage(key); setMobileOpen(false); setSearch(""); setQuery(""); setPlayer(null); if(key!=="category")setActiveCategory(""); window.scrollTo({top:0,behavior:"smooth"}); };
+  const go = key => { setPage(key); setMobileOpen(false); setSearch(""); setQuery(""); setPlayer(null); if(key!=="category"&&key!=="live")setActiveCategory(""); window.scrollTo({top:0,behavior:"smooth"}); };
   const [activeCategory,setActiveCategory]=useState("");
   const [categoryData,setCategoryData]=useState([]);
   const [categoryLoading,setCategoryLoading]=useState(false);
@@ -170,7 +170,7 @@ function App(){
     if(page==="search") return {"Search Results":rows["Search Results"]||[]};
     if(page==="category") return {[categoryLabels[activeCategory]||"Trending"]:categoryData};
     return rows;
-  },[page,rows,watchlist,history]);
+  },[page,rows,watchlist,history,activeCategory,categoryData]);
 
   return <div className="app">
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
@@ -186,7 +186,7 @@ function App(){
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
           {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}
           {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
-          {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && <Empty page={page}/>}
+          {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && <Empty page={page}/>}
         </main>
         <Footer/>
         </>}
