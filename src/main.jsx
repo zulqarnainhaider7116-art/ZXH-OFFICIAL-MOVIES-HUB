@@ -145,7 +145,7 @@ function App(){
       </>
     }
     {selected && <Details item={selected} close={()=>setSelected(null)} toggleWatch={toggleWatch} saved={isSaved(selected.id)} openDetails={openDetails} openPlayer={openPlayer}/>}
-    {page!=="player" && <MobileNav page={page} go={go}/ >}
+    {page!=="player" && <MobileNav page={page} go={go}/>}
   </div>
 }
 
