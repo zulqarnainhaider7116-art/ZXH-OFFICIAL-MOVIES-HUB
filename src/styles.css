@@ -110,3 +110,7 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 .player-shell:fullscreen,.player-shell:-webkit-full-screen{position:fixed;inset:0;z-index:9999;width:100vw;height:100vh;height:100dvh;max-width:none;min-height:0;aspect-ratio:auto;border:0;border-radius:0;margin:0;background:#000;box-shadow:none}
 .player-shell:fullscreen iframe,.player-shell:-webkit-full-screen iframe,.player-shell:fullscreen video,.player-shell:-webkit-full-screen video{width:100%;height:100%;object-fit:contain}
 @media(max-width:700px){.player-shell:fullscreen,.player-shell:-webkit-full-screen{width:100vw;height:100dvh;border-radius:0}.player-controls{width:100%;justify-content:space-between}}
+
+/* Portrait-device fallback: rotate the fullscreen player surface when orientation lock is blocked */
+.player-shell.force-landscape:fullscreen,.player-shell.force-landscape:-webkit-full-screen{position:fixed;top:0;left:100vw;width:100dvh;height:100vw;max-width:none;min-height:0;aspect-ratio:auto;transform:rotate(90deg);transform-origin:top left;border:0;border-radius:0;margin:0;background:#000;z-index:99999}
+.player-shell.force-landscape:fullscreen iframe,.player-shell.force-landscape:-webkit-full-screen iframe,.player-shell.force-landscape:fullscreen video,.player-shell.force-landscape:-webkit-full-screen video{width:100%;height:100%;object-fit:contain}
