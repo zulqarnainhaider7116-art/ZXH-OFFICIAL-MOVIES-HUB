@@ -593,3 +593,12 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
   .player-playback-selectors label{font-size:7px}
   .player-playback-selectors select{font-size:9px}
 }
+
+/* Install prompt visibility and supplied XURVYNA brand layout */
+.install-overlay[hidden]{display:none!important}
+.install-card .install-icon{display:block;object-fit:cover}
+.install-card .kicker{position:relative;display:block;color:#c7d2ff;font-size:9px;font-weight:900;letter-spacing:1.8px}
+.install-card .install-main{position:relative;width:100%;min-height:50px;margin-top:4px;border:0;border-radius:15px;background:linear-gradient(135deg,#ff4ca8,#a65dff 58%,#6289ff);color:#fff;font-size:12px;font-weight:900;letter-spacing:.8px;cursor:pointer;box-shadow:0 8px 22px rgba(151,86,228,.3)}
+.install-card .install-main b{margin-left:8px;font-size:17px}
+.install-card #installLater{display:block;width:100%;min-height:38px;margin-top:8px;border:0;background:transparent;color:#e5e9f5;font-size:11px;font-weight:850;letter-spacing:1.3px;cursor:pointer}
+.install-card .install-help{margin:12px auto 4px;padding:10px 12px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(255,255,255,.08);font-size:12px}
