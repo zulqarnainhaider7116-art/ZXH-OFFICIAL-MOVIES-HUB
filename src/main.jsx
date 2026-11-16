@@ -95,7 +95,32 @@ function App(){
     return ()=>{document.body.style.overflow="";window.removeEventListener("keydown",onKey)};
   },[selected]);
 
-  const go = key => { setPage(key); setMobileOpen(false); setSearch(""); setQuery(""); setPlayer(null); window.scrollTo({top:0,behavior:"smooth"}); };
+  const go = key => { setPage(key); setMobileOpen(false); setSearch(""); setQuery(""); setPlayer(null); if(key!=="category")setActiveCategory(""); window.scrollTo({top:0,behavior:"smooth"}); };
+  const [activeCategory,setActiveCategory]=useState("");
+  const [categoryData,setCategoryData]=useState([]);
+  const [categoryLoading,setCategoryLoading]=useState(false);
+  const [categoryError,setCategoryError]=useState("");
+  const chooseCategory=async(key,label)=>{
+    setMobileOpen(false);
+    if(key==="live"){setActiveCategory(key);go("live");return;}
+    setActiveCategory(key);setPage("category");setPlayer(null);setCategoryLoading(true);setCategoryError("");setCategoryData([]);
+    window.scrollTo({top:0,behavior:"smooth"});
+    try{
+      let path="/trending/all/week",params={};
+      if(key==="movies")path="/movie/popular";
+      else if(key==="series")path="/tv/popular";
+      else if(key==="anime"){path="/discover/tv";params={with_genres:"16",with_original_language:"ja",sort_by:"popularity.desc"};}
+      else if(key==="bollywood"){path="/discover/movie";params={with_original_language:"hi",region:"IN",sort_by:"popularity.desc"};}
+      else if(key==="hollywood"){path="/discover/movie";params={with_original_language:"en",region:"US",sort_by:"popularity.desc"};}
+      else if(key==="pakistani"){path="/discover/movie";params={with_original_language:"ur",sort_by:"popularity.desc"};}
+      else if(key==="korean"){path="/discover/tv";params={with_original_language:"ko",sort_by:"popularity.desc"};}
+      else if(key==="turkish"){path="/discover/tv";params={with_original_language:"tr",sort_by:"popularity.desc"};}
+      else if(key==="action"||key==="comedy"||key==="horror"){path="/discover/movie";params={with_genres:key==="action"?"28":key==="comedy"?"35":"27",sort_by:"popularity.desc"};}
+      const data=await api(path,params);
+      setCategoryData((data.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:x.media_type||(path.includes("/tv")||path==="/tv/popular"?"tv":"movie")})));
+    }catch(e){setCategoryError(e.message||"Unable to load this category.");}
+    finally{setCategoryLoading(false);}
+  };
 
   const openPlayer = entry => { setPlayerBackPage(page === "player" ? playerBackPage : page); setPlayer(entry); setSelected(null); setPage("player"); window.scrollTo({top:0,behavior:"smooth"}); };
   const closePlayer = () => { setPlayer(null); setPage(playerBackPage || "home"); window.scrollTo({top:0,behavior:"smooth"}); };
@@ -143,6 +168,7 @@ function App(){
     if(page==="movie") return {"Popular Movies":rows["Popular Movies"]||[],"Top Rated":rows["Top Rated"]||[]};
     if(page==="tv") return {"Popular Series":rows["Popular Series"]||[],"On Air":rows["On Air"]||[]};
     if(page==="search") return {"Search Results":rows["Search Results"]||[]};
+    if(page==="category") return {[categoryLabels[activeCategory]||"Trending"]:categoryData};
     return rows;
   },[page,rows,watchlist,history]);
 
@@ -185,15 +211,20 @@ function YouTubeSearchRow({items,loading,error,openPlayer}){
   </section>;
 }
 
-function Header({search,setSearch,submit,open,setOpen,go,page}){
+const categoryItems=[["Trending","trending"],["Live TV","live"],["Movies","movies"],["Series","series"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"]];
+const categoryLabels=Object.fromEntries(categoryItems.map(([label,key])=>[key,label]));
+function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,chooseCategory}){
   return <header className="header glass">
-    <button className="brand" onClick={()=>go("home")} aria-label="ZXH Movies home">
-      <span className="brand-mark">Z</span><span>ZXH <b>OFFICIAL OTT</b></span>
-    </button>
-    <nav className="desktop-nav">{navItems.map(([label,Icon,key])=><button className={page===key?"active":""} key={key} onClick={()=>go(key)}><Icon size={16}/>{label}</button>)}</nav>
-    <form className="searchbox" onSubmit={submit}><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies & series…"/>{search&&<button type="button" onClick={()=>setSearch("")}><X size={14}/></button>}</form>
-    <button className="menu-btn" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
-    {open&&<div className="mobile-menu glass">{navItems.map(([label,Icon,key])=><button key={key} onClick={()=>go(key)}><Icon size={18}/>{label}</button>)}</div>}
+    <div className="header-main">
+      <button className="brand" onClick={()=>go("home")} aria-label="ZXH Official OTT home">
+        <span className="brand-mark">Z</span><span>ZXH <b>OFFICIAL OTT</b></span>
+      </button>
+      <nav className="desktop-nav">{navItems.map(([label,Icon,key])=><button className={page===key?"active":""} key={key} onClick={()=>go(key)}><Icon size={16}/>{label}</button>)}</nav>
+      <form className="searchbox" onSubmit={submit}><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies & series…"/>{search&&<button type="button" onClick={()=>setSearch("")}><X size={14}/></button>}</form>
+      <button type="button" className="menu-btn" aria-label="Open navigation menu" aria-expanded={open} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
+    </div>
+    <nav className="category-nav" aria-label="Browse categories">{categoryItems.map(([label,key])=><button type="button" key={key} className={activeCategory===key?"active":""} onClick={()=>chooseCategory(key,label)}>{label}</button>)}</nav>
+    {open&&<div className="mobile-menu glass">{navItems.map(([label,Icon,key])=><button type="button" key={key} onClick={()=>go(key)}><Icon size={18}/>{label}</button>)}</div>}
   </header>
 }
 
