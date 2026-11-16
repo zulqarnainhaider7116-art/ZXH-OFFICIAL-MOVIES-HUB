@@ -117,7 +117,7 @@ function App(){
         api("/discover/tv",{with_origin_country:code,with_genres:"10759",sort_by:"popularity.desc"})
       ]);
       const clean=(d,type)=>(d.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:type}));
-      setCountryRows({[countryOptions.find(x=>x[0]===code)?.[1]||code+" Movies"]:clean(movies,"movie"),"Action Movies":clean(action,"movie"),"Horror Movies":clean(horror,"movie"),"Anime":clean(anime,"tv"),"TV Series":clean(series,"tv"),"Action Series":clean(actionTV,"tv")});
+      setCountryRows({[(countryOptions.find(x=>x[0]===code)?.[1]||code)+" Movies"]:clean(movies,"movie"),"Action Movies":clean(action,"movie"),"Horror Movies":clean(horror,"movie"),"Anime":clean(anime,"tv"),"TV Series":clean(series,"tv"),"Action Series":clean(actionTV,"tv")});
     }catch(e){setCountryError(e.message||"Could not load country collections.");}
     finally{setCountryLoading(false)}
   };
@@ -212,7 +212,7 @@ function App(){
           {page==="country"&&countryError&&<p className="fak-error">{countryError}</p>}
           {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}
           {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
-          {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && <Empty page={page}/>}
+          {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && !(page==="country"&&countryLoading) && <Empty page={page}/>}
         </main>
         <Footer/>
         </>}
