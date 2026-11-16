@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import { createRoot } from "react-dom/client";
 import {
   Search, Home, Film, Tv, Heart, Clock3, UserRound, Menu, X, Play,
@@ -316,7 +316,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
           <div className="trailer-heading"><div><h3>YouTube · Play Inside ZXH</h3><span className="fak-powered">Official YouTube embedded player · no app redirect</span></div></div>
           {youtubeLoading&&<p>Finding embeddable long-form videos…</p>}
           {youtubeError&&<p className="fak-error">{youtubeError}</p>}
-          {youtubeResults.map((video,index)=><button className="fak-result" key={video.id+"-"+index} onClick={()=>openPlayer({kind:"youtube",source:"youtube",youtubeId:video.id,title:video.title,poster:video.thumbnail,channel:video.channel,duration:video.duration,description:video.description})}>
+          {youtubeResults.map((video,index)=><button className="fak-result" key={video.id+"-"+index} onClick={()=>openPlayer({kind:"youtube",source:"youtube",youtubeId:video.id,title:video.title,poster:video.thumbnail,channel:video.channel,duration:video.duration,description:video.description,youtubeQueue:youtubeResults,youtubeIndex:index})}>
             <img src={video.thumbnail||""} alt="" loading="lazy"/><span><strong>{video.title}</strong><small>{video.channel} · {video.duration||"Duration unavailable"} · YouTube embed</small></span><Play size={17}/>
           </button>)}
           <p className="youtube-note">Only videos that allow embedding can play here. Full-film availability and viewing rights depend on the uploader.</p>
@@ -339,6 +339,54 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
 }
 
 
+function YouTubeAutoPlayer({entry}){
+  const hostRef=useRef(null);
+  const playerRef=useRef(null);
+  const [activeIndex,setActiveIndex]=useState(Math.max(0,entry.youtubeIndex||0));
+  const [fallbackMessage,setFallbackMessage]=useState("");
+  const queue=Array.isArray(entry.youtubeQueue)&&entry.youtubeQueue.length?entry.youtubeQueue:[{id:entry.youtubeId,title:entry.title,channel:entry.channel,duration:entry.duration}];
+  const active=queue[Math.min(activeIndex,queue.length-1)];
+  useEffect(()=>{
+    let cancelled=false;
+    const mount=()=>{
+      if(cancelled||!hostRef.current||!window.YT?.Player)return;
+      if(playerRef.current){try{playerRef.current.destroy()}catch{}}
+      playerRef.current=new window.YT.Player(hostRef.current,{
+        videoId:active?.id,
+        playerVars:{autoplay:1,rel:0,playsinline:1,origin:window.location.origin},
+        events:{
+          onError:event=>{
+            if(cancelled)return;
+            const next=activeIndex+1;
+            if(next<queue.length){
+              setFallbackMessage("This video is blocked or unavailable. Trying the next playable result…");
+              setActiveIndex(next);
+            }else{
+              setFallbackMessage("All matching YouTube results refused playback. Try another title or source.");
+            }
+          }
+        }
+      });
+    };
+    if(window.YT?.Player) mount();
+    else{
+      const previous=window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady=()=>{if(typeof previous==="function")previous();mount()};
+      if(!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')){
+        const script=document.createElement("script");
+        script.src="https://www.youtube.com/iframe_api";
+        document.head.appendChild(script);
+      }
+    }
+    return ()=>{cancelled=true;if(playerRef.current){try{playerRef.current.destroy()}catch{}playerRef.current=null}};
+  },[activeIndex,active?.id,queue.length]);
+  return <div className="youtube-auto-player">
+    <div ref={hostRef} className="youtube-iframe-host"/>
+    {fallbackMessage&&<p className="youtube-fallback-message" role="status">{fallbackMessage}</p>}
+    <div className="youtube-queue-status">Playing result {Math.min(activeIndex+1,queue.length)} of {queue.length}: {active?.title||entry.title}</div>
+  </div>;
+}
+
 function PlayerScreen({entry,onBack}){
   const detail=entry.detail||{};
   const streams=Array.isArray(detail.streams)?detail.streams.filter(s=>s&&s.url):[];
@@ -355,9 +403,9 @@ function PlayerScreen({entry,onBack}){
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Playback powered by the authorized Movies API integration."}</p></div>
     </section>
     <section className="player-shell">
-      {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <iframe src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(entry.youtubeId)}?autoplay=1&rel=0&modestbranding=1`} title={entry.title||"ZXH OFFICIAL YouTube Player"} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen loading="eager"/> : <iframe src={embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager"/>}
+      {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe src={embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager"/>}
     </section>
-    {entry.source==="youtube"&&<div className="player-info-row"><div><strong>Source</strong><span>YouTube embedded player</span></div><div><strong>Channel</strong><span>{entry.channel||"YouTube creator"}</span></div><div><strong>Duration</strong><span>{entry.duration||"Not provided"}</span></div></div>}
+    {entry.source==="youtube"&&<div className="player-info-row"><div><strong>Source</strong><span>YouTube embedded player · automatic fallback enabled</span></div><div><strong>Channel</strong><span>{entry.channel||"YouTube creator"}</span></div><div><strong>Duration</strong><span>{entry.duration||"Not provided"}</span></div></div>}
     {entry.source==="archive"&&<div className="player-info-row"><div><strong>Source</strong><span>Internet Archive</span></div><div><strong>Rights</strong><span>{entry.license||"See source item license"}</span></div><div><strong>Format</strong><span>{entry.format||"Browser video"}</span></div></div>}
     <div className="player-info-row">
       <div><strong>Available servers</strong><span>{streams.length?streams.length+" server option(s) supplied by the API":"Server switching is provided by the embedded player."}</span></div>
