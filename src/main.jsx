@@ -203,6 +203,8 @@ function Empty({page}){return <div className="empty"><Bookmark size={34}/><h3>{p
 
 function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const [showTrailer,setShowTrailer]=useState(false);
+  const [activeSource,setActiveSource]=useState("");
+  const activateSource=(source)=>{setActiveSource(source);setShowTrailer(false);setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");setFakLoading(false);setYoutubeResults([]);setYoutubeError("");setYoutubeLoading(false);setArchiveResults([]);setArchiveError("");setArchiveLoading(false);};
   const [fakResults,setFakResults]=useState([]);
   const [fakLoading,setFakLoading]=useState(false);
   const [fakError,setFakError]=useState("");
@@ -215,6 +217,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const [youtubeLoading,setYoutubeLoading]=useState(false);
   const [youtubeError,setYoutubeError]=useState("");
   const findFakTitle=async()=>{
+    activateSource("fak");
     setFakLoading(true);setFakError("");setFakResults([]);setFakEpisodes([]);setFakPlayer(null);
     try{
       const kind=item.media_type==="tv"?"all":"movie";
@@ -260,6 +263,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
     }
   };
   const findYouTubeVideos=async()=>{
+    activateSource("youtube");
     setYoutubeLoading(true);setYoutubeError("");setYoutubeResults([]);
     try{
       const suffix=item.media_type==="tv"?" full episodes":" full movie";
@@ -272,6 +276,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
     finally{setYoutubeLoading(false);}
   };
   const findArchiveStreams=async()=>{
+    activateSource("archive");
     setArchiveLoading(true);setArchiveError("");setArchiveResults([]);
     try{
       const response=await fetch("/api/archive/search?q="+encodeURIComponent(titleOf(item)));
@@ -298,13 +303,13 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
             <h1>{titleOf(item)}</h1>
             <div className="meta"><span className="rating"><Star size={14} fill="currentColor"/> {scoreOf(item)}</span><span>{yearOf(item)||"—"}</span><span>{item.runtime?`${item.runtime} min`:item.number_of_seasons?`${item.number_of_seasons} Seasons`:"HD"}</span></div>
             <p>{item.overview || "No overview available."}</p>
-            <div className="hero-actions"><button className="primary-btn" onClick={findFakTitle}><Play size={17} fill="currentColor"/> Watch Full {item.media_type==="tv"?"Series":"Movie"}</button><button className="glass-btn" onClick={findArchiveStreams}>Free Legal Sources</button><button className="glass-btn" onClick={findYouTubeVideos}><Play size={16}/> Search YouTube</button><button className="glass-btn" onClick={()=>setShowTrailer(true)} disabled={!trailer}><Play size={17} fill="currentColor"/> {trailer?"Play Trailer":"Trailer Unavailable"}</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>
+            <div className="hero-actions"><button className="primary-btn" onClick={findFakTitle}><Play size={17} fill="currentColor"/> Watch Full {item.media_type==="tv"?"Series":"Movie"}</button><button className="glass-btn" onClick={findArchiveStreams}>Free Legal Sources</button><button className="glass-btn" onClick={findYouTubeVideos}><Play size={16}/> Search YouTube</button><button className="glass-btn" onClick={()=>{activateSource("trailer");setShowTrailer(true)}} disabled={!trailer}><Play size={17} fill="currentColor"/> {trailer?"Play Trailer":"Trailer Unavailable"}</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>
             <div className="genres">{item.genres?.map(g=><span key={g.id}>{g.name}</span>)}</div>
           </div>
         </div>
       </div>
       <div className="details-body">
-        {(fakLoading||fakError||fakResults.length>0||fakEpisodes.length>0||fakPlayer)&&<div className="detail-block fak-block">
+        {activeSource==="fak"&&(fakLoading||fakError||fakResults.length>0||fakEpisodes.length>0||fakPlayer)&&<div className="detail-block fak-block">
           <div className="trailer-heading"><div><h3>Watch with ZXH-OFFICIAL LAB CREW API</h3><span className="fak-powered">Powered by ZXH-OFFICIAL LAB CREW</span></div>{fakResults.length>0&&<button className="glass-btn" onClick={()=>{setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");}}>Reset</button>}</div>
           {fakLoading&&<p>Searching available sources…</p>}
           {fakError&&<p className="fak-error">{fakError}</p>}
@@ -312,7 +317,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
           {fakEpisodes.length>0&&<div className="fak-results">{fakEpisodes.map((episode,index)=><button className="fak-result fak-episode" key={episode.id||index} onClick={()=>openPlayer({kind:"episode",id:episode.id,title:episode.title||"Episode "+(episode.episode||index+1),detail:episode})}><span className="episode-number">{episode.episode||index+1}</span><span><strong>{episode.title||"Episode "+(episode.episode||index+1)}</strong><small>Season {episode.season||1} · Episode {episode.episode||index+1}</small></span><Play size={17}/></button>)}</div>}
           {fakPlayer&&<button className="primary-btn" onClick={()=>openPlayer(fakPlayer)}><Play size={16}/> Open separate player</button>}
         </div>}
-        {(youtubeLoading||youtubeError||youtubeResults.length>0)&&<div className="detail-block youtube-block">
+        {activeSource==="youtube"&&(youtubeLoading||youtubeError||youtubeResults.length>0)&&<div className="detail-block youtube-block">
           <div className="trailer-heading"><div><h3>YouTube · Play Inside ZXH</h3><span className="fak-powered">Official YouTube embedded player · no app redirect</span></div></div>
           {youtubeLoading&&<p>Finding embeddable long-form videos…</p>}
           {youtubeError&&<p className="fak-error">{youtubeError}</p>}
@@ -321,7 +326,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
           </button>)}
           <p className="youtube-note">Only videos that allow embedding can play here. Full-film availability and viewing rights depend on the uploader.</p>
         </div>}
-        {(archiveLoading||archiveError||archiveResults.length>0)&&<div className="detail-block archive-block">
+        {activeSource==="archive"&&(archiveLoading||archiveError||archiveResults.length>0)&&<div className="detail-block archive-block">
           <div className="trailer-heading"><div><h3>Free Legal Streaming Sources</h3><span className="fak-powered">Internet Archive · verified license metadata</span></div></div>
           {archiveLoading&&<p>Searching public-domain and Creative Commons videos…</p>}
           {archiveError&&<p className="fak-error">{archiveError}</p>}
@@ -329,7 +334,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
             <span className="episode-number"><Play size={15}/></span><span><strong>{source.title}</strong><small>{source.format} · {source.license}</small></span><ChevronRight size={18}/>
           </button>)}
         </div>}
-        {showTrailer&&trailer&&<div className="detail-block trailer-block"><div className="trailer-heading"><h3>Now Playing · {titleOf(item)} Trailer</h3><button className="glass-btn" onClick={()=>setShowTrailer(false)}><X size={15}/> Close</button></div><div className="trailer-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0&modestbranding=1`} title={`${titleOf(item)} trailer`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen/></div></div>}
+        {activeSource==="trailer"&&showTrailer&&trailer&&<div className="detail-block trailer-block"><div className="trailer-heading"><h3>Now Playing · {titleOf(item)} Trailer</h3><button className="glass-btn" onClick={()=>setShowTrailer(false)}><X size={15}/> Close</button></div><div className="trailer-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0&modestbranding=1`} title={`${titleOf(item)} trailer`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen/></div></div>}
         <div className="detail-block"><h3>About this title</h3><p>{item.overview || "No description available."}</p></div>
         {cast.length>0&&<div className="detail-block"><h3>Cast</h3><div className="cast">{cast.map(c=><div className="cast-item" key={c.id}><img src={img(c.profile_path,"w185")} alt={c.name}/><strong>{c.name}</strong><span>{c.character}</span></div>)}</div></div>}
         {rec.length>0&&<div className="detail-block"><h3>You may also like</h3><div className="mini-grid">{rec.map(x=><MovieCard key={x.id} item={{...x,media_type:item.media_type}} openDetails={openDetails}/>)}</div></div>}
