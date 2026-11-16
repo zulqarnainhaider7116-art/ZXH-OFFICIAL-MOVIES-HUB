@@ -632,7 +632,7 @@ function PlayerScreen({entry,onBack}){
   const embedPath="/api/fak/embed/"+entry.kind+"/"+encodeURIComponent(entry.id);
   return <main className="player-page">
     <div className="player-topbar">
-      <div className="player-controls"><button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button><button className="glass-btn" onClick={togglePlayerFullscreen}><span>{isFullscreen?"Exit Fullscreen":"Fullscreen"}</span></button>{entry.source==="anyplay"&&entry.anyplayServers?.length>0&&}</div>
+      <div className="player-controls"><button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button><button className="glass-btn" onClick={togglePlayerFullscreen}><span>{isFullscreen?"Exit Fullscreen":"Fullscreen"}</span></button></div>
       <span className="fak-powered">ZXH OFFICIAL PLAYER</span>
     </div>
     {entry.source==="anyplay"&&entry.anyplayServers?.length>1&&<div className="player-server-options" aria-label="Playback options">{entry.anyplayServers.map((server,index)=><button type="button" key={server.id} className={activeAnyplayServer===String(server.id)?"active":""} aria-pressed={activeAnyplayServer===String(server.id)} onClick={()=>setActiveAnyplayServer(String(server.id))}>OPTION {index+1}</button>)}</div>}
