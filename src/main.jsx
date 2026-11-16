@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import { createRoot } from "react-dom/client";
 import {
-  Search, Home, Film, Tv, Heart, Clock3, UserRound, Menu, X, Play,
+  Search, Home, Film, Tv, Heart, Clock3, UserRound, Menu, X, Play, Globe2,
   Plus, Check, Star, ChevronRight, ChevronLeft, Info, SlidersHorizontal,
   Sparkles, Bookmark, History, ArrowLeft, LoaderCircle, AlertCircle, Radio
 } from "lucide-react";
@@ -100,6 +100,27 @@ function App(){
   const [categoryData,setCategoryData]=useState([]);
   const [categoryLoading,setCategoryLoading]=useState(false);
   const [categoryError,setCategoryError]=useState("");
+  const [countryCode,setCountryCode]=useState("PK");
+  const [countryRows,setCountryRows]=useState({});
+  const [countryLoading,setCountryLoading]=useState(false);
+  const [countryError,setCountryError]=useState("");
+  const countryOptions=[["PK","Pakistan"],["US","United States"],["GB","United Kingdom"],["IN","India"],["TR","Turkey"],["KR","South Korea"],["JP","Japan"],["CN","China"],["BD","Bangladesh"],["AE","UAE"],["SA","Saudi Arabia"],["CA","Canada"],["AU","Australia"],["FR","France"],["DE","Germany"],["ES","Spain"],["IT","Italy"],["BR","Brazil"],["MX","Mexico"],["ID","Indonesia"],["TH","Thailand"],["PH","Philippines"],["NG","Nigeria"],["ZA","South Africa"]];
+  const loadCountry=async(code=countryCode)=>{
+    setCountryCode(code);setPage("country");setMobileOpen(false);setCountryLoading(true);setCountryError("");setCountryRows({});setPlayer(null);window.scrollTo({top:0,behavior:"smooth"});
+    try{
+      const [movies,action,horror,anime,series,actionTV]=await Promise.all([
+        api("/discover/movie",{region:code,sort_by:"popularity.desc"}),
+        api("/discover/movie",{region:code,with_genres:"28",sort_by:"popularity.desc"}),
+        api("/discover/movie",{region:code,with_genres:"27",sort_by:"popularity.desc"}),
+        api("/discover/tv",{with_origin_country:code,with_genres:"16",sort_by:"popularity.desc"}),
+        api("/discover/tv",{with_origin_country:code,sort_by:"popularity.desc"}),
+        api("/discover/tv",{with_origin_country:code,with_genres:"10759",sort_by:"popularity.desc"})
+      ]);
+      const clean=(d,type)=>(d.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:type}));
+      setCountryRows({[countryOptions.find(x=>x[0]===code)?.[1]||code+" Movies"]:clean(movies,"movie"),"Action Movies":clean(action,"movie"),"Horror Movies":clean(horror,"movie"),"Anime":clean(anime,"tv"),"TV Series":clean(series,"tv"),"Action Series":clean(actionTV,"tv")});
+    }catch(e){setCountryError(e.message||"Could not load country collections.");}
+    finally{setCountryLoading(false)}
+  };
   const chooseCategory=async(key,label)=>{
     setMobileOpen(false);
     if(key==="live"){setActiveCategory(key);go("live");return;}
@@ -169,12 +190,13 @@ function App(){
     if(page==="tv") return {"Popular Series":rows["Popular Series"]||[],"On Air":rows["On Air"]||[]};
     if(page==="search") return {"Search Results":rows["Search Results"]||[]};
     if(page==="category") return {[categoryLabels[activeCategory]||"Trending"]:categoryData};
+    if(page==="country") return countryRows;
     return rows;
-  },[page,rows,watchlist,history,activeCategory,categoryData]);
+  },[page,rows,watchlist,history,activeCategory,categoryData,countryRows]);
 
   return <div className="app">
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
-    <Header search={search} setSearch={setSearch} submit={doSearch} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory}/>
+    <Header search={search} setSearch={setSearch} submit={doSearch} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen"><LoaderCircle className="spin" size={34}/><span>Loading cinema…</span></div> :
       <>
@@ -184,6 +206,10 @@ function App(){
           {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
+          {page==="category" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH COLLECTION</span><h1>{categoryLabels[activeCategory]||"Trending"}</h1><p>Explore titles in this collection.</p></div></div>}
+          {page==="country" && <div className="page-head category-page-head"><div><span className="eyebrow">COUNTRY COLLECTION</span><h1>{countryOptions.find(x=>x[0]===countryCode)?.[1]||countryCode}</h1><p>Movies, genres, anime and television from your selected country.</p></div></div>}
+          {page==="country"&&countryLoading&&<p className="country-loading">Loading country collections…</p>}
+          {page==="country"&&countryError&&<p className="fak-error">{countryError}</p>}
           {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}
           {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
           {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && <Empty page={page}/>}
@@ -211,9 +237,9 @@ function YouTubeSearchRow({items,loading,error,openPlayer}){
   </section>;
 }
 
-const categoryItems=[["Trending","trending"],["Live TV","live"],["Movies","movies"],["Series","series"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"]];
+const categoryItems=[["Trending","trending"],["Movies","movies"],["Series","series"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
 const categoryLabels=Object.fromEntries(categoryItems.map(([label,key])=>[key,label]));
-function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,chooseCategory}){
+function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,chooseCategory,countryCode,countryOptions,loadCountry}){
   return <header className="header glass">
     <div className="header-main">
       <button className="brand" onClick={()=>go("home")} aria-label="ZXH Official OTT home">
@@ -224,7 +250,7 @@ function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,cho
       <button type="button" className="menu-btn" aria-label="Open navigation menu" aria-expanded={open} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
     </div>
     <nav className="category-nav" aria-label="Browse categories">{categoryItems.map(([label,key])=><button type="button" key={key} className={activeCategory===key?"active":""} onClick={()=>chooseCategory(key,label)}>{label}</button>)}</nav>
-    {open&&<div className="mobile-menu glass">{navItems.map(([label,Icon,key])=><button type="button" key={key} onClick={()=>go(key)}><Icon size={18}/>{label}</button>)}</div>}
+    {open&&<><button className="menu-scrim" aria-label="Close menu" onClick={()=>setOpen(false)}/><aside className="mobile-menu glass"><div className="menu-profile"><span className="profile-avatar"><UserRound size={24}/></span><div><strong>ZXH Guest</strong><small>Guest profile · Local watchlist</small></div><button type="button" onClick={()=>setOpen(false)} aria-label="Close menu"><X size={18}/></button></div><div className="menu-section-label">NAVIGATION</div>{navItems.filter(([,I,k])=>k!=="live").map(([label,Icon,key])=><button type="button" key={key} onClick={()=>go(key)}><Icon size={18}/>{label}</button>)}<div className="menu-section-label">COUNTRY WISE</div><label className="country-picker"><span>Select country</span><select value={countryCode} onChange={e=>loadCountry(e.target.value)}>{countryOptions.map(([code,name])=><option value={code} key={code}>{name}</option>)}</select></label><button type="button" className="country-open-btn" onClick={()=>loadCountry(countryCode)}><Globe2 size={17}/> Explore {countryOptions.find(x=>x[0]===countryCode)?.[1]||countryCode}</button><div className="menu-section-label">BROWSE CATEGORIES</div>{categoryItems.filter(([,key])=>key!=="live").map(([label,key])=><button type="button" key={key} onClick={()=>chooseCategory(key,label)}><Film size={17}/>{label}</button>)}<div className="menu-section-label">LIVE</div><button type="button" onClick={()=>chooseCategory("live","Live TV")}><Radio size={18}/>Live TV</button><small className="menu-credit">ZXH OFFICIAL · ZULQARNAIN X HAIDER</small></aside></>}
   </header>
 }
 
