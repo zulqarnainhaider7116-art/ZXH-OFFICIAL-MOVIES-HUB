@@ -40,6 +40,9 @@ function App(){
   const [playerBackPage,setPlayerBackPage] = useState("home");
   const [search,setSearch] = useState("");
   const [query,setQuery] = useState("");
+  const [youtubeSearchResults,setYoutubeSearchResults] = useState([]);
+  const [youtubeSearchError,setYoutubeSearchError] = useState("");
+  const [youtubeSearchLoading,setYoutubeSearchLoading] = useState(false);
   const [watchlist,setWatchlist] = useState(()=>JSON.parse(localStorage.getItem("zxh-watchlist")||"[]"));
   const [history,setHistory] = useState(()=>JSON.parse(localStorage.getItem("zxh-history")||"[]"));
 
@@ -108,12 +111,29 @@ function App(){
   const doSearch=async(e)=>{
     e?.preventDefault();
     const q=search.trim(); if(!q) return;
-    try{
-      setLoading(true); setPage("search");
-      const data=await api("/search/multi",{query:q,include_adult:"false"});
+    setLoading(true); setPage("search"); setQuery(q);
+    setYoutubeSearchLoading(true); setYoutubeSearchError(""); setYoutubeSearchResults([]);
+    window.scrollTo({top:0,behavior:"smooth"});
+    const [tmdbResult,youtubeResult]=await Promise.allSettled([
+      api("/search/multi",{query:q,include_adult:"false"}),
+      fetch("/api/youtube/search?q="+encodeURIComponent(q)).then(async response=>{
+        const payload=await response.json().catch(()=>({}));
+        if(!response.ok||payload.error) throw new Error(payload.error?.message||payload.error||"YouTube search failed.");
+        return payload.results||[];
+      })
+    ]);
+    if(tmdbResult.status==="fulfilled"){
+      const data=tmdbResult.value;
       setRows(r=>({...r,"Search Results":data.results?.filter(x=>(x.media_type==="movie"||x.media_type==="tv")&&x.poster_path)||[]}));
-      setQuery(q); window.scrollTo({top:0,behavior:"smooth"});
-    }catch(e){setError("Search failed.");} finally{setLoading(false);}
+    }else{
+      setRows(r=>({...r,"Search Results":[]}));
+      setError("TMDB search failed.");
+    }
+    if(youtubeResult.status==="fulfilled"){
+      setYoutubeSearchResults(youtubeResult.value);
+      if(!youtubeResult.value.length) setYoutubeSearchError("No embeddable long-form YouTube videos found for this search.");
+    }else setYoutubeSearchError(youtubeResult.reason?.message||"YouTube search is unavailable. Check YOUTUBE_API_KEY in Vercel Environment Variables.");
+    setYoutubeSearchLoading(false); setLoading(false);
   };
 
   const sectionData = useMemo(()=>{
@@ -138,6 +158,7 @@ function App(){
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
           {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}
+          {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
           {Object.values(sectionData).every(a=>!a?.length) && <Empty page={page}/>}
         </main>
         <Footer/>
@@ -147,6 +168,20 @@ function App(){
     {selected && <Details item={selected} close={()=>setSelected(null)} toggleWatch={toggleWatch} saved={isSaved(selected.id)} openDetails={openDetails} openPlayer={openPlayer}/>}
     {page!=="player" && <MobileNav page={page} go={go}/>}
   </div>
+}
+
+
+function YouTubeSearchRow({items,loading,error,openPlayer}){
+  if(!loading&&!error&&!items.length) return null;
+  return <section className="row-section youtube-search-section">
+    <div className="row-head"><div><span className="eyebrow">WATCH INSIDE ZXH</span><h2>YouTube Search Results</h2></div><span className="fak-powered">Embedded videos only</span></div>
+    {loading&&<p>Searching YouTube…</p>}
+    {error&&<p className="fak-error">{error}</p>}
+    {items.length>0&&<div className="mini-grid">{items.map((video,index)=><button className="movie-card" key={video.id+"-"+index} onClick={()=>openPlayer({kind:"youtube",source:"youtube",youtubeId:video.id,title:video.title,poster:video.thumbnail,channel:video.channel,duration:video.duration,description:video.description,youtubeQueue:items,youtubeIndex:index})}>
+      <div className="poster"><img src={video.thumbnail||""} alt={video.title} loading="lazy"/><span className="card-play"><Play size={18} fill="currentColor"/></span></div>
+      <div className="card-info"><strong>{video.title}</strong><span>{video.channel||"YouTube"} · {video.duration||"Duration unavailable"}</span></div>
+    </button>)}</div>}
+  </section>;
 }
 
 function Header({search,setSearch,submit,open,setOpen,go,page}){
