@@ -444,3 +444,29 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
   .player-page{padding-left:11px;padding-right:11px}
   .player-controls .glass-btn{font-size:10px}
 }
+
+
+/* ZXH AnyPlay multi-server integration */
+.anyplay-block{border:1px solid rgba(130,149,255,.28);background:linear-gradient(135deg,rgba(92,112,190,.12),rgba(255,255,255,.025))}
+.anyplay-count{padding:7px 10px;border-radius:999px;background:#8295ff20;color:#cbd4ff;font-size:10px;font-weight:900;letter-spacing:1px}
+.anyplay-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end;margin:18px 0}
+.anyplay-controls label,.player-server-picker{display:grid;gap:7px;min-width:0;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.8px}
+.anyplay-controls select,.player-server-picker select{width:100%;min-width:0;height:44px;padding:0 12px;border:1px solid var(--line);border-radius:11px;background:#171b28;color:var(--text);font-size:12px;outline:0}
+.anyplay-controls select option,.player-server-picker select option{background:#171b28;color:#fff}
+.anyplay-watch-btn{min-height:44px;justify-content:center;white-space:nowrap}
+.anyplay-server-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}
+.anyplay-server-list button{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:11px;border:1px solid var(--line);border-radius:11px;background:#ffffff08;color:var(--text);text-align:left;cursor:pointer}
+.anyplay-server-list button.selected{border-color:#8295ff99;background:#8295ff20}
+.anyplay-server-list button span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:800}
+.anyplay-server-list button small{flex:0 0 auto;color:var(--muted);font-size:8px;font-weight:900;letter-spacing:.6px}
+.player-server-picker{display:flex;align-items:center;gap:8px}
+.player-server-picker span{white-space:nowrap}
+.player-server-picker select{width:auto;max-width:190px;height:38px}
+@media(max-width:700px){
+ .anyplay-controls{grid-template-columns:1fr 1fr;gap:9px}
+ .anyplay-controls label:first-child{grid-column:1/-1}
+ .anyplay-watch-btn{grid-column:1/-1;width:100%}
+ .anyplay-server-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .player-server-picker{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center}
+ .player-server-picker select{width:100%;max-width:none}
+}
