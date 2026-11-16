@@ -305,6 +305,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const [anyplayEpisode,setAnyplayEpisode]=useState("1");
   const [anyplayEpisodes,setAnyplayEpisodes]=useState([]);
   const [anyplayEpisodesLoading,setAnyplayEpisodesLoading]=useState(false);
+  const [showPlaybackOptions,setShowPlaybackOptions]=useState(false);
   useEffect(()=>{
     let cancelled=false;
     const loadServers=async()=>{
@@ -422,73 +423,14 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   };
   const [autoWatchLoading,setAutoWatchLoading]=useState(false);
   const [autoWatchError,setAutoWatchError]=useState("");
-  const playAnyPlay=(serverId=anyplayServerId,season=anyplaySeason,episode=anyplayEpisode)=>{
-    if(!serverId){setAnyplayError("No playback option is available.");return;}
-    const isSeries=item.media_type==="tv";
-    const embedUrl="https://anyplay.stream/embed/movie/"+encodeURIComponent(serverId)+"/"+item.id+(isSeries?"/"+season+"/"+episode:"");
-    openPlayer({kind:"anyplay",source:"anyplay",embedUrl,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season:Number(season)||1,episode:Number(episode)||1,anyplayServers,serverId,title:titleOf(item),poster:img(item.poster_path,"w780"),description:item.overview||""});
-  };
-  const watchNow=async()=>{
-    if(autoWatchLoading)return;
-    setAutoWatchLoading(true);setAutoWatchError("");setActiveSource("");
-    const title=titleOf(item);
-    try{
-      // Priority 1: AnyPlay external server pool. Server IDs are loaded from its public API.
-      try{
-        const sr=await fetch("/api/stream/servers");
-        const sp=await sr.json();
-        const servers=Array.isArray(sp)?sp:(sp.servers||sp.results||[]);
-        if(sr.ok&&servers.length){
-          const serverId=String(servers[0].id);
-          const isSeries=item.media_type==="tv";
-          const season=Number(item.seasons?.find(s=>s.season_number>0)?.season_number||1);
-          const episode=1;
-          const embedUrl="https://anyplay.stream/embed/movie/"+encodeURIComponent(serverId)+"/"+item.id+(isSeries?"/"+season+"/"+episode:"");
-          openPlayer({kind:"anyplay",source:"anyplay",embedUrl,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season,episode,anyplayServers:servers,serverId,title,poster:img(item.poster_path,"w780"),description:item.overview||""});
-          return;
-        }
-      }catch{}
-      // Priority 2: configured Movies API. Only use its returned playback route.
-      try{
-        const kind=item.media_type==="tv"?"all":"movie";
-        const r=await fetch("/api/fak/search?q="+encodeURIComponent(title)+"&type="+kind);
-        const p=await r.json();
-        if(r.ok&&!p.error){
-          const results=(p.data?.results||[]).filter(x=>item.media_type==="tv"?(x.type==="series"||x.type==="anime"):x.type==="movie");
-          if(results.length){
-            const selected=results[0];
-            if(selected.type==="series"||selected.type==="anime"){
-              const er=await fetch("/api/fak/series/"+encodeURIComponent(selected.id));
-              const ep=await er.json();
-              const detail=ep.data||ep.result||ep;
-              const first=(detail.episodes||detail.data?.episodes||[])[0];
-              if(first){openPlayer({kind:"episode",id:first.id,title:first.title||"Episode 1",detail:first,poster:selected.image||""});return;}
-            }else{
-              const dr=await fetch("/api/fak/movie-detail?slug="+encodeURIComponent(selected.id));
-              const dp=await dr.json();
-              const detail=dp.data||dp.result||dp;
-              if(dr.ok&&!dp.error&&detail) {openPlayer({kind:"movie",id:selected.id,title:detail.title||selected.title,detail,poster:detail.poster||selected.image||""});return;}
-            }
-          }
-        }
-      }catch{}
-      // Priority 2: playable public-domain / Creative Commons copy.
-      try{
-        const r=await fetch("/api/archive/search?q="+encodeURIComponent(title));
-        const p=await r.json();
-        const first=(p.results||[])[0];
-        if(r.ok&&!p.error&&first?.url){openPlayer({kind:"archive",source:"archive",id:first.id,title:first.title,poster:first.poster,streamUrl:first.url,format:first.format,license:first.license});return;}
-      }catch{}
-      // Priority 3: official YouTube embed. Its source attribution/player branding remains visible.
-      try{
-        const suffix=item.media_type==="tv"?" full episodes":" full movie";
-        const r=await fetch("/api/youtube/search?q="+encodeURIComponent(title+suffix));
-        const p=await r.json();
-        const first=(p.results||[])[0];
-        if(r.ok&&!p.error&&first?.id){openPlayer({kind:"youtube",source:"youtube",youtubeId:first.id,title:first.title,poster:first.thumbnail,channel:first.channel,duration:first.duration,description:first.description,youtubeQueue:p.results,youtubeIndex:0});return;}
-      }catch{}
-      setAutoWatchError("Is title ke liye abhi koi playable source nahi mila. Provider availability ya playback rights check karein.");
-    }finally{setAutoWatchLoading(false);}
+  const watchNow=()=>{
+    if(anyplayLoading||anyplayEpisodesLoading)return;
+    if(!showPlaybackOptions){
+      setShowPlaybackOptions(true);
+      setAutoWatchError("");
+      return;
+    }
+    playAnyPlay();
   };
   const trailer=item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Trailer"&&v.key)
     || item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Teaser"&&v.key);
@@ -506,30 +448,12 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
             <h1>{titleOf(item)}</h1>
             <div className="meta"><span className="rating"><Star size={14} fill="currentColor"/> {scoreOf(item)}</span><span>{yearOf(item)||"—"}</span><span>{item.runtime?`${item.runtime} min`:item.number_of_seasons?`${item.number_of_seasons} Seasons`:"HD"}</span></div>
             <p>{item.overview || "No overview available."}</p>
-            <div className="hero-actions"><button className="primary-btn" onClick={watchNow} disabled={autoWatchLoading}><Play size={17} fill="currentColor"/> {autoWatchLoading?"Finding best stream…":"WATCH"}</button>{trailer&&<button className="glass-btn" onClick={()=>{setActiveSource("trailer");setShowTrailer(true);}}><Play size={16}/> Trailer</button>}<button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>{autoWatchError&&<p className="fak-error" role="status">{autoWatchError}</p>}
+            <div className="hero-actions"><button className="primary-btn" onClick={watchNow} disabled={anyplayLoading||anyplayEpisodesLoading}><Play size={17} fill="currentColor"/> {anyplayLoading?"Loading…":anyplayEpisodesLoading?"Preparing…":showPlaybackOptions?"WATCH NOW":"WATCH"}</button>{trailer&&<button className="glass-btn" onClick={()=>{setActiveSource("trailer");setShowTrailer(true);}}><Play size={16}/> Trailer</button>}<button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>{showPlaybackOptions&&<div className="anyplay-controls"><label><span>Playback option</span><select value={anyplayServerId} onChange={e=>setAnyplayServerId(e.target.value)}>{anyplayServers.map((server,index)=><option key={server.id} value={server.id}>Option {index+1}</option>)}</select></label>{item.media_type==="tv"&&<><label><span>Season</span><select value={anyplaySeason} onChange={e=>setAnyplaySeason(e.target.value)}>{(item.seasons||[]).filter(s=>s.season_number>0).map(s=><option key={s.id||s.season_number} value={s.season_number}>Season {s.season_number}</option>)}</select></label><label><span>Episode</span><select value={anyplayEpisode} onChange={e=>setAnyplayEpisode(e.target.value)} disabled={anyplayEpisodesLoading||!anyplayEpisodes.length}>{anyplayEpisodes.map(ep=><option key={ep.id} value={ep.episode_number}>Episode {ep.episode_number}{ep.name?" · "+ep.name:""}</option>)}</select></label></>}</div>}{anyplayError&&<p className="fak-error" role="status">{anyplayError}</p>}
             <div className="genres">{item.genres?.map(g=><span key={g.id}>{g.name}</span>)}</div>
           </div>
         </div>
       </div>
       <div className="details-body">
-        <div className="detail-block anyplay-block">
-          <div className="trailer-heading"><div><h3>ZXH PLAYER</h3><span className="fak-powered">Choose a playback option</span></div></div>
-          {anyplayLoading&&<p>Preparing player…</p>}
-          {anyplayError&&<p className="fak-error">Playback options are temporarily unavailable. Please try again.</p>}
-          {!anyplayLoading&&anyplayServers.length>0&&<>
-            <div className="anyplay-controls">
-              <label><span>Playback option</span><select value={anyplayServerId} onChange={e=>setAnyplayServerId(e.target.value)}>{anyplayServers.map((server,index)=><option key={server.id} value={server.id}>Option {index+1}</option>)}</select></label>
-              {item.media_type==="tv"&&<>
-                <label><span>Season</span><select value={anyplaySeason} onChange={e=>setAnyplaySeason(e.target.value)}>{(item.seasons||[]).filter(s=>s.season_number>0).map(s=><option key={s.id||s.season_number} value={s.season_number}>Season {s.season_number}</option>)}</select></label>
-                <label><span>Episode</span><select value={anyplayEpisode} onChange={e=>setAnyplayEpisode(e.target.value)} disabled={anyplayEpisodesLoading||!anyplayEpisodes.length}>{anyplayEpisodes.map(ep=><option key={ep.id} value={ep.episode_number}>Episode {ep.episode_number}{ep.name?" · "+ep.name:""}</option>)}</select></label>
-              </>}
-              <button className="primary-btn anyplay-watch-btn" onClick={()=>playAnyPlay()} disabled={anyplayEpisodesLoading}><Play size={16} fill="currentColor"/> {anyplayEpisodesLoading?"Preparing…":"PLAY NOW"}</button>
-            </div>
-            <div className="anyplay-server-list">{anyplayServers.map((server,index)=><button type="button" key={server.id} className={anyplayServerId===String(server.id)?"selected":""} onClick={()=>setAnyplayServerId(String(server.id))}><span>OPTION {index+1}</span><small>{anyplayServerId===String(server.id)?"SELECTED":"SELECT"}</small></button>)}</div>
-            {item.media_type==="tv"&&anyplayEpisodesLoading&&<p>Loading season episodes…</p>}
-          </>}
-          
-        </div>
         {activeSource==="fak"&&(fakLoading||fakError||fakResults.length>0||fakEpisodes.length>0||fakPlayer)&&<div className="detail-block fak-block">
           <div className="trailer-heading"><div><h3>ZXH OFFICIAL PLAYER</h3><span className="fak-powered">Premium playback experience</span></div>{fakResults.length>0&&<button className="glass-btn" onClick={()=>{setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");}}>Reset</button>}</div>
           {fakLoading&&<p>Searching available sources…</p>}
