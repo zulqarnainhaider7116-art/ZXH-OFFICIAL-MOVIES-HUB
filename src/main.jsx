@@ -650,6 +650,60 @@ function PlayerScreen({entry,onBack}){
     ?"https://anyplay.stream/embed/movie/"+encodeURIComponent(activeAnyplayServer)+"/"+entry.tmdbId+(entry.mediaType==="tv"?"/"+entry.season+"/"+entry.episode:"")
     :entry.embedUrl;
   const playerShellRef=useRef(null);
+  const nativeVideoRef=useRef(null);
+  const [audioTracks,setAudioTracks]=useState([]);
+  const [selectedAudioTrack,setSelectedAudioTrack]=useState("");
+  const [audioTrackStatus,setAudioTrackStatus]=useState("");
+  useEffect(()=>{
+    if(entry.source!=="archive"){
+      setAudioTracks([]);
+      setSelectedAudioTrack("");
+      setAudioTrackStatus("This provider uses an embedded player. ZXH cannot inspect or switch its internal audio tracks.");
+      return;
+    }
+    const video=nativeVideoRef.current;
+    if(!video)return;
+    const refreshTracks=()=>{
+      const list=video.audioTracks;
+      if(!list){
+        setAudioTracks([]);
+        setSelectedAudioTrack("");
+        setAudioTrackStatus("This browser does not expose selectable audio tracks for this video.");
+        return;
+      }
+      const tracks=Array.from(list).map((track,index)=>({
+        id:String(index),
+        label:track.label||track.language||("Audio "+(index+1)),
+        language:track.language||"",
+        enabled:!!track.enabled
+      }));
+      setAudioTracks(tracks);
+      const active=tracks.find(track=>track.enabled);
+      setSelectedAudioTrack(active?.id??(tracks[0]?.id??""));
+      setAudioTrackStatus(tracks.length>1?"Multiple audio tracks detected. Choose a language to switch.":tracks.length===1?"Only one audio track is available.":"No alternate audio tracks were detected in this source.");
+    };
+    refreshTracks();
+    const list=video.audioTracks;
+    list?.addEventListener?.("addtrack",refreshTracks);
+    list?.addEventListener?.("removetrack",refreshTracks);
+    list?.addEventListener?.("change",refreshTracks);
+    video.addEventListener("loadedmetadata",refreshTracks);
+    return()=>{
+      list?.removeEventListener?.("addtrack",refreshTracks);
+      list?.removeEventListener?.("removetrack",refreshTracks);
+      list?.removeEventListener?.("change",refreshTracks);
+      video.removeEventListener("loadedmetadata",refreshTracks);
+    };
+  },[entry.source,entry.streamUrl]);
+  const changeAudioTrack=value=>{
+    const video=nativeVideoRef.current;
+    const list=video?.audioTracks;
+    if(!list)return;
+    const index=Number(value);
+    for(let i=0;i<list.length;i++)list[i].enabled=i===index;
+    setSelectedAudioTrack(value);
+    setAudioTracks(Array.from(list).map((track,i)=>({id:String(i),label:track.label||track.language||("Audio "+(i+1)),language:track.language||"",enabled:!!track.enabled})));
+  };
   const [isFullscreen,setIsFullscreen]=useState(false);
   const [forceLandscape,setForceLandscape]=useState(false);
   useEffect(()=>{const sync=()=>{const active=!!document.fullscreenElement;setIsFullscreen(active);if(active){try{const orientation=window.screen?.orientation;if(orientation?.lock){Promise.resolve(orientation.lock("landscape")).then(()=>setForceLandscape(false)).catch(()=>setForceLandscape(window.matchMedia("(orientation: portrait)").matches));}else setForceLandscape(window.matchMedia("(orientation: portrait)").matches);}catch{setForceLandscape(window.matchMedia("(orientation: portrait)").matches);}}else{setForceLandscape(false);try{window.screen?.orientation?.unlock?.()}catch{}}};document.addEventListener("fullscreenchange",sync);return()=>document.removeEventListener("fullscreenchange",sync)},[]);
@@ -669,7 +723,14 @@ function PlayerScreen({entry,onBack}){
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Enjoy your selection in the ZXH OFFICIAL player."}</p></div>
     </section>
     <section className={"player-shell"+(forceLandscape?" force-landscape":"")} ref={playerShellRef}>
-      {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe key={entry.source==="anyplay"?anyplayEmbedUrl:embedPath} src={entry.source==="anyplay"?anyplayEmbedUrl:embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager" referrerPolicy="strict-origin-when-cross-origin"/>}
+      {entry.source==="archive" ? <video ref={nativeVideoRef} className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe key={entry.source==="anyplay"?anyplayEmbedUrl:embedPath} src={entry.source==="anyplay"?anyplayEmbedUrl:embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager" referrerPolicy="strict-origin-when-cross-origin"/>}
+    </section>
+    <section className="audio-language-panel" aria-label="Audio language settings">
+      <div className="audio-language-heading"><Globe2 size={17}/><div><strong>Audio Language</strong><small>Switch between audio tracks available in this source</small></div></div>
+      {audioTracks.length>0
+        ? <label className="audio-language-select"><span>Available tracks</span><select value={selectedAudioTrack} onChange={e=>changeAudioTrack(e.target.value)} disabled={audioTracks.length<2}>{audioTracks.map(track=><option key={track.id} value={track.id}>{track.label}{track.language&&track.label!==track.language?" ("+track.language+")":""}</option>)}</select></label>
+        : <p className="audio-language-status">{audioTrackStatus||"Checking available audio tracks…"}</p>}
+      {audioTracks.length>0&&<p className="audio-language-status">{audioTrackStatus}</p>}
     </section>
     {entry.source==="youtube"&&<p className="youtube-note">Now playing inside ZXH OFFICIAL.</p>}
     {entry.source!=="youtube"&&entry.source!=="archive"&&<div className="player-info-row">
