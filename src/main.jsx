@@ -348,6 +348,27 @@ function Empty({page}){return <div className="empty"><Bookmark size={34}/><h3>{p
 
 function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const [showTrailer,setShowTrailer]=useState(false);
+  const availableSeasons=(item.seasons||[]).filter(season=>Number.isInteger(season.season_number)&&season.season_number>=0);
+  const [selectedSeason,setSelectedSeason]=useState(()=>Number(item.seasons?.find(season=>season.season_number>0)?.season_number??item.seasons?.[0]?.season_number??1));
+  const [selectedEpisode,setSelectedEpisode]=useState(1);
+  const [seasonEpisodes,setSeasonEpisodes]=useState([]);
+  const [seasonEpisodesLoading,setSeasonEpisodesLoading]=useState(false);
+  const [seasonEpisodesError,setSeasonEpisodesError]=useState("");
+  useEffect(()=>{
+    if(item.media_type!=="tv"){setSeasonEpisodes([]);return;}
+    let cancelled=false;
+    setSeasonEpisodesLoading(true);setSeasonEpisodesError("");setSeasonEpisodes([]);
+    api(`/tv/${item.id}/season/${selectedSeason}`).then(data=>{
+      if(cancelled)return;
+      const episodes=Array.isArray(data.episodes)?data.episodes:[];
+      setSeasonEpisodes(episodes);
+      setSelectedEpisode(current=>episodes.some(ep=>ep.episode_number===current)?current:Number(episodes[0]?.episode_number||1));
+      if(!episodes.length)setSeasonEpisodesError("No episodes are listed for this season.");
+    }).catch(error=>{
+      if(!cancelled)setSeasonEpisodesError(error.message||"Unable to load season episodes.");
+    }).finally(()=>{if(!cancelled)setSeasonEpisodesLoading(false);});
+    return()=>{cancelled=true;};
+  },[item.id,item.media_type,selectedSeason]);
   const [activeSource,setActiveSource]=useState("");
   const activateSource=(source)=>{setActiveSource(source);setShowTrailer(false);setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");setFakLoading(false);setYoutubeResults([]);setYoutubeError("");setYoutubeLoading(false);setArchiveResults([]);setArchiveError("");setArchiveLoading(false);};
   const [fakResults,setFakResults]=useState([]);
@@ -441,11 +462,11 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
     const season=Number(item.seasons?.find(s=>s.season_number>0)?.season_number||1);
     const episode=1;
     const servers=[
-      {id:"1",name:"SERVER 1",movie:id=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id,tv:(id,s,e)=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id+"/"+s+"/"+e},
-      {id:"2",name:"SERVER 2",movie:id=>"https://vidlink.pro/movie/"+id,tv:(id,s,e)=>"https://vidlink.pro/tv/"+id+"/"+s+"/"+e},
-      {id:"3",name:"SERVER 3",movie:id=>"https://player.vidzee.wtf/embed/movie/"+id,tv:(id,s,e)=>"https://player.vidzee.wtf/embed/tv/"+id+"/"+s+"/"+e},
-      {id:"4",name:"SERVER 4",movie:id=>"https://vidrock.net/embed/movie/"+id,tv:(id,s,e)=>"https://vidrock.net/embed/tv/"+id+"/"+s+"/"+e},
-      {id:"5",name:"SERVER 5",movie:id=>"https://vidnest.fun/movie/"+id,tv:(id,s,e)=>"https://vidnest.fun/tv/"+id+"/"+s+"/"+e}
+      {id:"1",name:"SERVER 1",movie:id=>"https://vidlink.pro/movie/"+id,tv:(id,s,e)=>"https://vidlink.pro/tv/"+id+"/"+s+"/"+e},
+      {id:"2",name:"SERVER 2",movie:id=>"https://player.vidzee.wtf/embed/movie/"+id,tv:(id,s,e)=>"https://player.vidzee.wtf/embed/tv/"+id+"/"+s+"/"+e},
+      {id:"3",name:"SERVER 3",movie:id=>"https://vidrock.net/embed/movie/"+id,tv:(id,s,e)=>"https://vidrock.net/embed/tv/"+id+"/"+s+"/"+e},
+      {id:"4",name:"SERVER 4",movie:id=>"https://vidnest.fun/movie/"+id,tv:(id,s,e)=>"https://vidnest.fun/tv/"+id+"/"+s+"/"+e},
+      {id:"5",name:"SERVER 5",movie:id=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id,tv:(id,s,e)=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id+"/"+s+"/"+e}
     ];
     const makeUrl=(server)=>isSeries?server.tv(item.id,season,episode):server.movie(item.id);
     openPlayer({kind:"stream",source:"direct-servers",serverIndex:0,servers,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season,episode,title:titleOf(item),poster:img(item.poster_path,"w780"),description:item.overview||""});
@@ -467,7 +488,12 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
             <h1>{titleOf(item)}</h1>
             <div className="meta"><span className="rating"><Star size={14} fill="currentColor"/> {scoreOf(item)}</span><span>{yearOf(item)||"—"}</span><span>{item.runtime?`${item.runtime} min`:item.number_of_seasons?`${item.number_of_seasons} Seasons`:"HD"}</span></div>
             <p>{item.overview || "No overview available."}</p>
-            <div className="hero-actions"><button className="primary-btn" onClick={watchNow} disabled={autoWatchLoading}><Play size={17} fill="currentColor"/> {autoWatchLoading?"Starting…":"WATCH"}</button>{trailer&&<button className="glass-btn" onClick={()=>{setActiveSource("trailer");setShowTrailer(true);}}><Play size={16}/> Trailer</button>}<button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>{autoWatchError&&<p className="fak-error" role="status">{autoWatchError}</p>}
+            <div className="hero-actions"><button className="primary-btn" onClick={watchNow} disabled={autoWatchLoading}><Play size={17} fill="currentColor"/> {autoWatchLoading?"Starting…":"WATCH"}</button>{item.media_type==="tv"&&<div className="series-episode-picker" aria-label="Select season and episode">
+              <label><span>SEASON</span><select value={selectedSeason} onChange={event=>{setSelectedSeason(Number(event.target.value));setSelectedEpisode(1);}}>{availableSeasons.map(season=><option key={season.id||season.season_number} value={season.season_number}>Season {season.season_number}</option>)}</select></label>
+              <label><span>EPISODE</span><select value={selectedEpisode} onChange={event=>setSelectedEpisode(Number(event.target.value))} disabled={seasonEpisodesLoading||!seasonEpisodes.length}>{seasonEpisodes.map(episode=><option key={episode.id||episode.episode_number} value={episode.episode_number}>Episode {episode.episode_number}{episode.name?" · "+episode.name:""}</option>)}</select></label>
+              {seasonEpisodesLoading&&<small>Loading episodes…</small>}
+              {seasonEpisodesError&&<small className="series-picker-error">{seasonEpisodesError}</small>}
+            </div>}{trailer&&<button className="glass-btn" onClick={()=>{setActiveSource("trailer");setShowTrailer(true);}}><Play size={16}/> Trailer</button>}<button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>{autoWatchError&&<p className="fak-error" role="status">{autoWatchError}</p>}
             <div className="genres">{item.genres?.map(g=><span key={g.id}>{g.name}</span>)}</div>
           </div>
         </div>
