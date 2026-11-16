@@ -342,7 +342,8 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
 function YouTubeAutoPlayer({entry}){
   const hostRef=useRef(null);
   const playerRef=useRef(null);
-  const [activeIndex,setActiveIndex]=useState(Math.max(0,entry.youtubeIndex||0));
+  const indexRef=useRef(Math.max(0,entry.youtubeIndex||0));
+  const [activeIndex,setActiveIndex]=useState(indexRef.current);
   const [fallbackMessage,setFallbackMessage]=useState("");
   const queue=Array.isArray(entry.youtubeQueue)&&entry.youtubeQueue.length?entry.youtubeQueue:[{id:entry.youtubeId,title:entry.title,channel:entry.channel,duration:entry.duration}];
   const active=queue[Math.min(activeIndex,queue.length-1)];
@@ -350,17 +351,18 @@ function YouTubeAutoPlayer({entry}){
     let cancelled=false;
     const mount=()=>{
       if(cancelled||!hostRef.current||!window.YT?.Player)return;
-      if(playerRef.current){try{playerRef.current.destroy()}catch{}}
       playerRef.current=new window.YT.Player(hostRef.current,{
-        videoId:active?.id,
+        videoId:queue[indexRef.current]?.id,
         playerVars:{autoplay:1,rel:0,playsinline:1,origin:window.location.origin},
         events:{
-          onError:event=>{
+          onError:()=>{
             if(cancelled)return;
-            const next=activeIndex+1;
+            const next=indexRef.current+1;
             if(next<queue.length){
-              setFallbackMessage("This video is blocked or unavailable. Trying the next playable result…");
+              indexRef.current=next;
               setActiveIndex(next);
+              setFallbackMessage("This video is blocked or unavailable. Trying the next playable result…");
+              playerRef.current?.loadVideoById(queue[next].id);
             }else{
               setFallbackMessage("All matching YouTube results refused playback. Try another title or source.");
             }
@@ -379,7 +381,7 @@ function YouTubeAutoPlayer({entry}){
       }
     }
     return ()=>{cancelled=true;if(playerRef.current){try{playerRef.current.destroy()}catch{}playerRef.current=null}};
-  },[activeIndex,active?.id,queue.length]);
+  },[]);
   return <div className="youtube-auto-player">
     <div ref={hostRef} className="youtube-iframe-host"/>
     {fallbackMessage&&<p className="youtube-fallback-message" role="status">{fallbackMessage}</p>}
