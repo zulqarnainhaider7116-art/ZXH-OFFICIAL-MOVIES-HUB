@@ -563,3 +563,33 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 .series-episode-picker>small{width:100%;color:var(--muted);font-size:10px}
 .series-episode-picker .series-picker-error{color:#ff9b9b}
 @media(max-width:600px){.series-episode-picker{gap:8px;padding:11px}.series-episode-picker label{min-width:calc(50% - 4px)}}
+
+/* ZXH player screen: season, episode and server in one aligned row */
+.player-playback-selectors{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  align-items:end;
+  margin:0 0 18px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(255,255,255,.035);
+}
+.player-playback-selectors:not(.is-series){grid-template-columns:minmax(180px,1fr);max-width:360px}
+.player-playback-selectors label{display:grid;gap:7px;min-width:0;color:var(--muted);font-size:9px;font-weight:850;letter-spacing:.65px}
+.player-playback-selectors select{width:100%;min-width:0;height:43px;padding:0 9px;border:1px solid var(--line);border-radius:10px;background:#171b28;color:var(--text);font-size:11px;outline:0}
+.player-playback-selectors select option{background:#171b28;color:#fff}
+.player-playback-selectors>small{grid-column:1/-1;color:var(--muted);font-size:10px}
+.player-playback-selectors .series-picker-error{color:#ff9b9b}
+@media(max-width:700px){
+  .player-playback-selectors{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 14px;padding:8px}
+  .player-playback-selectors:not(.is-series){grid-template-columns:minmax(0,1fr);max-width:none}
+  .player-playback-selectors label{font-size:8px;letter-spacing:.25px;gap:6px}
+  .player-playback-selectors select{height:42px;padding:0 5px;font-size:10px}
+}
+@media(max-width:360px){
+  .player-playback-selectors{gap:4px;padding:6px}
+  .player-playback-selectors label{font-size:7px}
+  .player-playback-selectors select{font-size:9px}
+}
