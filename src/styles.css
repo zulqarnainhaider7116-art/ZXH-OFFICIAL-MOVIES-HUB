@@ -177,3 +177,129 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 
 /* Keep the full navigation drawer reachable on wide desktop screens too */
 .menu-btn{display:grid!important;place-items:center;flex:0 0 44px}
+
+
+/* ZXH mobile header + readable navigation drawer fix */
+@media(max-width:700px){
+  .header{
+    height:116px!important;
+    min-height:116px;
+    padding:8px 9px!important;
+    border-radius:18px;
+    overflow:visible;
+  }
+  .header-main{
+    height:44px!important;
+    min-height:44px;
+    display:flex;
+    gap:7px!important;
+    align-items:center;
+    width:100%;
+  }
+  .header .brand{
+    flex:0 0 auto;
+    min-width:0;
+    gap:6px;
+    font-size:10px;
+    letter-spacing:-.25px;
+  }
+  .header .brand-mark{width:32px;height:32px;flex:0 0 32px}
+  .header .searchbox{
+    flex:1 1 auto;
+    width:auto!important;
+    min-width:0!important;
+    height:38px;
+    margin:0!important;
+    padding:0 8px;
+    gap:6px;
+  }
+  .header .searchbox input{min-width:0;font-size:10px}
+  .header .menu-btn{width:38px;height:38px;flex:0 0 38px}
+  .header .category-nav{
+    position:absolute;
+    top:59px!important;
+    left:8px;
+    right:8px;
+    width:auto;
+    max-width:none;
+    min-height:43px;
+    padding:5px 7px!important;
+    gap:5px;
+    border-radius:12px;
+    z-index:2;
+  }
+  .header .category-nav button{
+    flex:0 0 auto;
+    padding:8px 10px!important;
+    font-size:10px!important;
+    line-height:1.2;
+  }
+  .mobile-menu{
+    position:fixed!important;
+    inset:0 0 0 auto!important;
+    width:min(330px,88vw)!important;
+    height:100dvh!important;
+    max-height:100dvh!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    padding:18px 16px calc(24px + env(safe-area-inset-bottom))!important;
+    gap:5px!important;
+    background:#11151f!important;
+    color:#f7f8fc!important;
+    border:1px solid rgba(255,255,255,.16)!important;
+    border-right:0!important;
+    border-radius:22px 0 0 22px!important;
+    box-shadow:-20px 0 60px rgba(0,0,0,.65)!important;
+    z-index:100!important;
+  }
+  .mobile-menu button{
+    min-height:46px!important;
+    padding:12px 13px!important;
+    color:#f0f2f8!important;
+    font-size:14px!important;
+    font-weight:650;
+    line-height:1.35;
+    text-align:left;
+  }
+  .mobile-menu button svg{flex:0 0 19px;color:#cbd5e1}
+  .mobile-menu button:hover,.mobile-menu button:focus-visible{
+    color:#fff!important;
+    background:rgba(255,255,255,.12)!important;
+    outline:1px solid rgba(255,255,255,.16);
+  }
+  .menu-profile{gap:11px;padding:8px 2px 17px;margin-bottom:8px}
+  .menu-profile strong{color:#fff;font-size:15px;font-weight:800}
+  .menu-profile small{color:#c1c8d6!important;font-size:11px;line-height:1.4}
+  .menu-profile>button{color:#fff!important;background:rgba(255,255,255,.12)!important;flex:0 0 36px}
+  .menu-section-label{
+    color:#aebbd0!important;
+    font-size:10px!important;
+    letter-spacing:1.4px;
+    padding:15px 9px 6px!important;
+  }
+  .country-picker{color:#e3e8f1!important;font-size:12px!important;padding:10px 8px 12px}
+  .country-picker select{
+    color:#fff!important;
+    background:#252c3a!important;
+    border-color:rgba(255,255,255,.2)!important;
+    font-size:14px;
+  }
+  .country-picker option{background:#171d29!important;color:#fff!important}
+  .mobile-menu .country-open-btn{
+    color:#fff!important;
+    background:#39466b!important;
+    border-color:#687dbb!important;
+    font-size:13px!important;
+  }
+  .menu-credit{color:#b9c3d3!important;font-size:10px}
+  .content:not(.home-content){padding-top:145px!important}
+  .content:not(.home-content) .category-page-head{padding-top:8px!important}
+  .page-head,.page-title{flex-wrap:wrap;gap:12px}
+}
+@media(max-width:380px){
+  .header .brand{font-size:9px;gap:5px}
+  .header .brand-mark{width:29px;height:29px;flex-basis:29px}
+  .header .searchbox{padding:0 6px}
+  .header .searchbox input{font-size:9px}
+  .header .menu-btn{width:36px;height:36px;flex-basis:36px}
+}
