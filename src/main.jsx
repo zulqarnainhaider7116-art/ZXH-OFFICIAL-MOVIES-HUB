@@ -322,6 +322,55 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
     }catch(e){setArchiveError(e.message||"Unable to search legal free sources.");}
     finally{setArchiveLoading(false);}
   };
+  const [autoWatchLoading,setAutoWatchLoading]=useState(false);
+  const [autoWatchError,setAutoWatchError]=useState("");
+  const watchNow=async()=>{
+    if(autoWatchLoading)return;
+    setAutoWatchLoading(true);setAutoWatchError("");setActiveSource("");
+    const title=titleOf(item);
+    try{
+      // Priority 1: configured Movies API. Only use its returned playback route.
+      try{
+        const kind=item.media_type==="tv"?"all":"movie";
+        const r=await fetch("/api/fak/search?q="+encodeURIComponent(title)+"&type="+kind);
+        const p=await r.json();
+        if(r.ok&&!p.error){
+          const results=(p.data?.results||[]).filter(x=>item.media_type==="tv"?(x.type==="series"||x.type==="anime"):x.type==="movie");
+          if(results.length){
+            const selected=results[0];
+            if(selected.type==="series"||selected.type==="anime"){
+              const er=await fetch("/api/fak/series/"+encodeURIComponent(selected.id));
+              const ep=await er.json();
+              const detail=ep.data||ep.result||ep;
+              const first=(detail.episodes||detail.data?.episodes||[])[0];
+              if(first){openPlayer({kind:"episode",id:first.id,title:first.title||"Episode 1",detail:first,poster:selected.image||""});return;}
+            }else{
+              const dr=await fetch("/api/fak/movie-detail?slug="+encodeURIComponent(selected.id));
+              const dp=await dr.json();
+              const detail=dp.data||dp.result||dp;
+              if(dr.ok&&!dp.error&&detail) {openPlayer({kind:"movie",id:selected.id,title:detail.title||selected.title,detail,poster:detail.poster||selected.image||""});return;}
+            }
+          }
+        }
+      }catch{}
+      // Priority 2: playable public-domain / Creative Commons copy.
+      try{
+        const r=await fetch("/api/archive/search?q="+encodeURIComponent(title));
+        const p=await r.json();
+        const first=(p.results||[])[0];
+        if(r.ok&&!p.error&&first?.url){openPlayer({kind:"archive",source:"archive",id:first.id,title:first.title,poster:first.poster,streamUrl:first.url,format:first.format,license:first.license});return;}
+      }catch{}
+      // Priority 3: official YouTube embed. Its source attribution/player branding remains visible.
+      try{
+        const suffix=item.media_type==="tv"?" full episodes":" full movie";
+        const r=await fetch("/api/youtube/search?q="+encodeURIComponent(title+suffix));
+        const p=await r.json();
+        const first=(p.results||[])[0];
+        if(r.ok&&!p.error&&first?.id){openPlayer({kind:"youtube",source:"youtube",youtubeId:first.id,title:first.title,poster:first.thumbnail,channel:first.channel,duration:first.duration,description:first.description,youtubeQueue:p.results,youtubeIndex:0});return;}
+      }catch{}
+      setAutoWatchError("Is title ke liye abhi koi playable source nahi mila. Provider availability ya playback rights check karein.");
+    }finally{setAutoWatchLoading(false);}
+  };
   const trailer=item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Trailer"&&v.key)
     || item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Teaser"&&v.key);
   const cast=item.credits?.cast?.slice(0,8)||[];
@@ -338,7 +387,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
             <h1>{titleOf(item)}</h1>
             <div className="meta"><span className="rating"><Star size={14} fill="currentColor"/> {scoreOf(item)}</span><span>{yearOf(item)||"—"}</span><span>{item.runtime?`${item.runtime} min`:item.number_of_seasons?`${item.number_of_seasons} Seasons`:"HD"}</span></div>
             <p>{item.overview || "No overview available."}</p>
-            <div className="hero-actions"><button className="primary-btn" onClick={findFakTitle}><Play size={17} fill="currentColor"/> Watch Full {item.media_type==="tv"?"Series":"Movie"}</button><button className="glass-btn" onClick={findArchiveStreams}>Free Legal Sources</button><button className="glass-btn" onClick={findYouTubeVideos}><Play size={16}/> Search YouTube</button><button className="glass-btn" onClick={()=>{activateSource("trailer");setShowTrailer(true)}} disabled={!trailer}><Play size={17} fill="currentColor"/> {trailer?"Play Trailer":"Trailer Unavailable"}</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>
+            <div className="hero-actions"><button className="primary-btn" onClick={watchNow} disabled={autoWatchLoading}><Play size={17} fill="currentColor"/> {autoWatchLoading?"Finding best stream…":"WATCH"}</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button></div>{autoWatchError&&<p className="fak-error" role="status">{autoWatchError}</p>}
             <div className="genres">{item.genres?.map(g=><span key={g.id}>{g.name}</span>)}</div>
           </div>
         </div>
