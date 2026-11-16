@@ -188,7 +188,7 @@ function YouTubeSearchRow({items,loading,error,openPlayer}){
 function Header({search,setSearch,submit,open,setOpen,go,page}){
   return <header className="header glass">
     <button className="brand" onClick={()=>go("home")} aria-label="ZXH Movies home">
-      <span className="brand-mark">Z</span><span>ZXH <b>MOVIES</b></span>
+      <span className="brand-mark">Z</span><span>ZXH <b>OFFICIAL OTT</b></span>
     </button>
     <nav className="desktop-nav">{navItems.map(([label,Icon,key])=><button className={page===key?"active":""} key={key} onClick={()=>go(key)}><Icon size={16}/>{label}</button>)}</nav>
     <form className="searchbox" onSubmit={submit}><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies & series…"/>{search&&<button type="button" onClick={()=>setSearch("")}><X size={14}/></button>}</form>
@@ -517,6 +517,6 @@ function MobileNav({page,go}){
  return <nav className="mobile-nav glass">{navItems.filter(([,Icon,key])=>["home","movie","tv","live"].includes(key)).map(([label,Icon,key])=><button className={page===key?"active":""} key={key} onClick={()=>go(key)}><Icon size={19}/><span>{label}</span></button>)}</nav>
 }
 function Footer(){
- return <footer><div className="footer-brand"><span className="brand-mark">Z</span><div><strong>ZXH MOVIES</strong><small>3D LIQUID GLASS CINEMA</small></div></div><p>Movie and TV metadata powered by TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.</p><span>© {new Date().getFullYear()} ZXH OFFICIAL</span></footer>
+ return <footer><div className="footer-brand"><span className="brand-mark">Z</span><div><strong>ZXH OFFICIAL OTT</strong><small>GLOBAL MOVIES · SERIES · LIVE TV</small></div></div><p>Movies and TV discovery powered by TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB. Live channel listings are supplied by IPTV-org.</p><span>© {new Date().getFullYear()} ZXH OFFICIAL</span></footer>
 }
 createRoot(document.getElementById("root")).render(<App/>);
