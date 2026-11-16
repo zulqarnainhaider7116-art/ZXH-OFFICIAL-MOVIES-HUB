@@ -44,6 +44,45 @@ function App(){
   const [youtubeSearchResults,setYoutubeSearchResults] = useState([]);
   const [youtubeSearchError,setYoutubeSearchError] = useState("");
   const [youtubeSearchLoading,setYoutubeSearchLoading] = useState(false);
+  const [installPromptEvent,setInstallPromptEvent]=useState(null);
+  const [showInstallPrompt,setShowInstallPrompt]=useState(false);
+
+  useEffect(()=>{
+    let timer;
+    const standalone=window.matchMedia?.("(display-mode: standalone)")?.matches||window.navigator.standalone===true;
+    const onBeforeInstall=e=>{
+      e.preventDefault();
+      setInstallPromptEvent(e);
+      if(!standalone&&!localStorage.getItem("pwaInstallPromptDismissed")&&!localStorage.getItem("pwaInstalled")){
+        timer=window.setTimeout(()=>setShowInstallPrompt(true),1500);
+      }
+    };
+    const onInstalled=()=>{
+      localStorage.setItem("pwaInstalled","true");
+      setShowInstallPrompt(false);
+      setInstallPromptEvent(null);
+    };
+    window.addEventListener("beforeinstallprompt",onBeforeInstall);
+    window.addEventListener("appinstalled",onInstalled);
+    return()=>{
+      window.clearTimeout(timer);
+      window.removeEventListener("beforeinstallprompt",onBeforeInstall);
+      window.removeEventListener("appinstalled",onInstalled);
+    };
+  },[]);
+  const dismissInstallPrompt=()=>{
+    localStorage.setItem("pwaInstallPromptDismissed","true");
+    setShowInstallPrompt(false);
+  };
+  const installApp=async()=>{
+    if(!installPromptEvent)return;
+    installPromptEvent.prompt();
+    const choice=await installPromptEvent.userChoice;
+    if(choice?.outcome==="accepted")localStorage.setItem("pwaInstalled","true");
+    else localStorage.setItem("pwaInstallPromptDismissed","true");
+    setShowInstallPrompt(false);
+    setInstallPromptEvent(null);
+  };
   const [watchlist,setWatchlist] = useState(()=>JSON.parse(localStorage.getItem("zxh-watchlist")||"[]"));
   const [history,setHistory] = useState(()=>JSON.parse(localStorage.getItem("zxh-history")||"[]"));
 
@@ -220,6 +259,19 @@ function App(){
     }
     {selected && <Details item={selected} close={()=>setSelected(null)} toggleWatch={toggleWatch} saved={isSaved(selected.id)} openDetails={openDetails} openPlayer={openPlayer}/>}
     {page!=="player" && <MobileNav page={page} go={go}/>}
+    {showInstallPrompt&&installPromptEvent&&<div className="install-overlay" role="dialog" aria-modal="true" aria-labelledby="install-title">
+      <div className="install-card">
+        <button className="install-close" type="button" onClick={dismissInstallPrompt} aria-label="Close install popup"><X size={18}/></button>
+        <div className="install-icon"><img src="/assets/xurvyna-app-icon.svg" alt="ZXH OFFICIAL XURVYNA app icon"/></div>
+        <span className="install-eyebrow">YOUR CINEMA, ONE TAP AWAY</span>
+        <h2 id="install-title">Install ZXH OFFICIAL</h2>
+        <p>Add this app to your home screen for quick access and offline use.</p>
+        <div className="install-actions">
+          <button type="button" className="install-later" onClick={dismissInstallPrompt}>Not Now</button>
+          <button type="button" className="install-now" onClick={installApp}>Install App <span>↗</span></button>
+        </div>
+      </div>
+    </div>}
   </div>
 }
 
