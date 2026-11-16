@@ -214,7 +214,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
       const kind=item.media_type==="tv"?"all":"movie";
       const response=await fetch("/api/fak/search?q="+encodeURIComponent(titleOf(item))+"&type="+kind);
       const contentType=response.headers.get("content-type")||"";
-      if(!contentType.includes("application/json")) throw new Error("Movie API route is not responding with JSON yet. Please retry after deployment.");
+      if(!contentType.includes("application/json")) throw new Error("Movies API returned "+(contentType||"an unknown response")+" (HTTP "+response.status+"). The upstream provider may be blocking the request.");
       const payload=await response.json();
       if(!response.ok||payload.error) throw new Error(payload.error?.message||"ZXH-OFFICIAL LAB CREW API search failed.");
       const allResults=payload.data?.results||[];
@@ -242,7 +242,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
     }else{
       setFakLoading(true);
       try{
-        const response=await fetch("/api/fak/movies/"+encodeURIComponent(result.id));
+        const response=await fetch("/api/fak/movie-detail?slug="+encodeURIComponent(result.id));
         const contentType=response.headers.get("content-type")||"";
         if(!contentType.includes("application/json")) throw new Error("Movie details endpoint did not return JSON.");
         const payload=await response.json();
