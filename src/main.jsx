@@ -226,7 +226,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   };
   const chooseFakResult=async(result)=>{
     setFakError("");
-    if(result.type==="series"){
+    if(result.type==="series"||result.type==="anime"){
       setFakLoading(true);
       try{
         const response=await fetch("/api/fak/series/"+encodeURIComponent(result.id));
