@@ -477,64 +477,19 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const watchNow=async()=>{
     if(autoWatchLoading)return;
     setAutoWatchLoading(true);setAutoWatchError("");setActiveSource("");
-    const title=titleOf(item);
-    try{
-      // First choice: open the first available playback option immediately.
-      try{
-        const sr=await fetch("/api/stream/servers");
-        const sp=await sr.json();
-        const servers=Array.isArray(sp)?sp:(sp.servers||sp.results||[]);
-        if(sr.ok&&servers.length){
-          const serverId=String(servers[0].id);
-          const isSeries=item.media_type==="tv";
-          const season=Number(item.seasons?.find(s=>s.season_number>0)?.season_number||1);
-          const episode=1;
-          const embedUrl="https://anyplay.stream/embed/movie/"+encodeURIComponent(serverId)+"/"+item.id+(isSeries?"/"+season+"/"+episode:"");
-          openPlayer({kind:"anyplay",source:"anyplay",embedUrl,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season,episode,anyplayServers:servers,serverId,title,poster:img(item.poster_path,"w780"),description:item.overview||""});
-          return;
-        }
-      }catch{}
-      // Fallback: configured movie catalogue.
-      try{
-        const kind=item.media_type==="tv"?"all":"movie";
-        const r=await fetch("/api/fak/search?q="+encodeURIComponent(title)+"&type="+kind);
-        const p=await r.json();
-        if(r.ok&&!p.error){
-          const results=(p.data?.results||[]).filter(x=>item.media_type==="tv"?(x.type==="series"||x.type==="anime"):x.type==="movie");
-          if(results.length){
-            const selected=results[0];
-            if(selected.type==="series"||selected.type==="anime"){
-              const er=await fetch("/api/fak/series/"+encodeURIComponent(selected.id));
-              const ep=await er.json();
-              const detail=ep.data||ep.result||ep;
-              const first=(detail.episodes||detail.data?.episodes||[])[0];
-              if(first){openPlayer({kind:"episode",id:first.id,title:first.title||"Episode 1",detail:first,poster:selected.image||""});return;}
-            }else{
-              const dr=await fetch("/api/fak/movie-detail?slug="+encodeURIComponent(selected.id));
-              const dp=await dr.json();
-              const detail=dp.data||dp.result||dp;
-              if(dr.ok&&!dp.error&&detail){openPlayer({kind:"movie",id:selected.id,title:detail.title||selected.title,detail,poster:detail.poster||selected.image||""});return;}
-            }
-          }
-        }
-      }catch{}
-      // Fallback: playable public-domain / Creative Commons copy.
-      try{
-        const r=await fetch("/api/archive/search?q="+encodeURIComponent(title));
-        const p=await r.json();
-        const first=(p.results||[])[0];
-        if(r.ok&&!p.error&&first?.url){openPlayer({kind:"archive",source:"archive",id:first.id,title:first.title,poster:first.poster,streamUrl:first.url,format:first.format,license:first.license});return;}
-      }catch{}
-      // Fallback: official YouTube embed.
-      try{
-        const suffix=item.media_type==="tv"?" full episodes":" full movie";
-        const r=await fetch("/api/youtube/search?q="+encodeURIComponent(title+suffix));
-        const p=await r.json();
-        const first=(p.results||[])[0];
-        if(r.ok&&!p.error&&first?.id){openPlayer({kind:"youtube",source:"youtube",youtubeId:first.id,title:first.title,poster:first.thumbnail,channel:first.channel,duration:first.duration,description:first.description,youtubeQueue:p.results,youtubeIndex:0});return;}
-      }catch{}
-      setAutoWatchError("Is title ke liye abhi koi playable source nahi mila.");
-    }finally{setAutoWatchLoading(false);}
+    const isSeries=item.media_type==="tv";
+    const season=Number(item.seasons?.find(s=>s.season_number>0)?.season_number||1);
+    const episode=1;
+    const servers=[
+      {id:"1",name:"SERVER 1",movie:id=>"https://stellarconductornexus.com/movie/"+id,tv:(id,s,e)=>"https://stellarconductornexus.com/tv/"+id+"/"+s+"/"+e},
+      {id:"2",name:"SERVER 2",movie:id=>"https://vidlink.pro/movie/"+id,tv:(id,s,e)=>"https://vidlink.pro/tv/"+id+"/"+s+"/"+e},
+      {id:"3",name:"SERVER 3",movie:id=>"https://player.vidzee.wtf/embed/movie/"+id,tv:(id,s,e)=>"https://player.vidzee.wtf/embed/tv/"+id+"/"+s+"/"+e},
+      {id:"4",name:"SERVER 4",movie:id=>"https://vidrock.net/movie/"+id,tv:(id,s,e)=>"https://vidrock.net/tv/"+id+"/"+s+"/"+e},
+      {id:"5",name:"SERVER 5",movie:id=>"https://vidnest.net/movie/"+id,tv:(id,s,e)=>"https://vidnest.net/tv/"+id+"/"+s+"/"+e}
+    ];
+    const makeUrl=(server)=>isSeries?server.tv(item.id,season,episode):server.movie(item.id);
+    openPlayer({kind:"stream",source:"direct-servers",serverIndex:0,servers,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season,episode,title:titleOf(item),poster:img(item.poster_path,"w780"),description:item.overview||""});
+    setAutoWatchLoading(false);
   };
   const trailer=item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Trailer"&&v.key)
     || item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Teaser"&&v.key);
@@ -645,9 +600,10 @@ function YouTubeAutoPlayer({entry}){
 
 function PlayerScreen({entry,onBack}){
   const detail=entry.detail||{};
-  const [activeAnyplayServer,setActiveAnyplayServer]=useState(String(entry.serverId||entry.anyplayServers?.[0]?.id||""));
-  const anyplayEmbedUrl=entry.source==="anyplay"&&activeAnyplayServer
-    ?"https://anyplay.stream/embed/movie/"+encodeURIComponent(activeAnyplayServer)+"/"+entry.tmdbId+(entry.mediaType==="tv"?"/"+entry.season+"/"+entry.episode:"")
+  const [activeServerIndex,setActiveServerIndex]=useState(Math.max(0,Number(entry.serverIndex)||0));
+  const activeServer=entry.source==="direct-servers"?entry.servers?.[activeServerIndex]:null;
+  const directEmbedUrl=activeServer
+    ?(entry.mediaType==="tv"?activeServer.tv(entry.tmdbId,entry.season,entry.episode):activeServer.movie(entry.tmdbId))
     :entry.embedUrl;
   const playerShellRef=useRef(null);
   const nativeVideoRef=useRef(null);
@@ -717,13 +673,13 @@ function PlayerScreen({entry,onBack}){
       <div className="player-controls"><button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button><button className="glass-btn" onClick={togglePlayerFullscreen}><span>{isFullscreen?"Exit Fullscreen":"Fullscreen"}</span></button></div>
       <span className="fak-powered">ZXH OFFICIAL PLAYER</span>
     </div>
-    {entry.source==="anyplay"&&entry.anyplayServers?.length>1&&<div className="player-server-options" aria-label="Playback options">{entry.anyplayServers.map((server,index)=><button type="button" key={server.id} className={activeAnyplayServer===String(server.id)?"active":""} aria-pressed={activeAnyplayServer===String(server.id)} onClick={()=>setActiveAnyplayServer(String(server.id))}>{server.name||("SERVER "+(index+1))}</button>)}</div>}
+    {entry.source==="direct-servers"&&entry.servers?.length>1&&<div className="player-server-options" aria-label="Playback options">{entry.servers.map((server,index)=><button type="button" key={server.id} className={activeServerIndex===index?"active":""} aria-pressed={activeServerIndex===index} onClick={()=>setActiveServerIndex(index)}>{server.name}</button>)}</div>}
     <section className="player-heading">
       {poster&&<img src={poster} alt="" loading="lazy"/>}
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Enjoy your selection in the ZXH OFFICIAL player."}</p></div>
     </section>
     <section className={"player-shell"+(forceLandscape?" force-landscape":"")} ref={playerShellRef}>
-      {entry.source==="archive" ? <video ref={nativeVideoRef} className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe key={entry.source==="anyplay"?anyplayEmbedUrl:embedPath} src={entry.source==="anyplay"?anyplayEmbedUrl:embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager" referrerPolicy="strict-origin-when-cross-origin"/>}
+      {entry.source==="archive" ? <video ref={nativeVideoRef} className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe key={entry.source==="direct-servers"?directEmbedUrl:embedPath} src={entry.source==="direct-servers"?directEmbedUrl:embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager" referrerPolicy="strict-origin-when-cross-origin"/>}
     </section>
     <section className="audio-language-panel" aria-label="Audio language settings">
       <div className="audio-language-heading"><Globe2 size={17}/><div><strong>Audio Language</strong><small>Switch between audio tracks available in this source</small></div></div>
