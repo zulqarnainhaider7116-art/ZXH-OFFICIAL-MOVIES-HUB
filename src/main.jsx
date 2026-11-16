@@ -297,6 +297,46 @@ function Empty({page}){return <div className="empty"><Bookmark size={34}/><h3>{p
 function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const [showTrailer,setShowTrailer]=useState(false);
   const [activeSource,setActiveSource]=useState("");
+  const [anyplayServers,setAnyplayServers]=useState([]);
+  const [anyplayLoading,setAnyplayLoading]=useState(false);
+  const [anyplayError,setAnyplayError]=useState("");
+  const [anyplayServerId,setAnyplayServerId]=useState("");
+  const [anyplaySeason,setAnyplaySeason]=useState("1");
+  const [anyplayEpisode,setAnyplayEpisode]=useState("1");
+  const [anyplayEpisodes,setAnyplayEpisodes]=useState([]);
+  const [anyplayEpisodesLoading,setAnyplayEpisodesLoading]=useState(false);
+  useEffect(()=>{
+    let cancelled=false;
+    const loadServers=async()=>{
+      setAnyplayLoading(true);setAnyplayError("");
+      try{
+        const response=await fetch("https://api.anyplay.stream/v1/servers");
+        if(!response.ok)throw new Error("AnyPlay servers request failed (HTTP "+response.status+").");
+        const payload=await response.json();
+        const servers=Array.isArray(payload)?payload:(payload.servers||payload.results||[]);
+        if(!servers.length)throw new Error("AnyPlay did not return any available servers.");
+        if(!cancelled){setAnyplayServers(servers);setAnyplayServerId(String(servers[0].id));}
+      }catch(e){if(!cancelled)setAnyplayError(e.message||"Unable to load AnyPlay servers.");}
+      finally{if(!cancelled)setAnyplayLoading(false);}
+    };
+    loadServers();
+    return()=>{cancelled=true};
+  },[item.id]);
+  useEffect(()=>{
+    if(item.media_type!=="tv"||!anyplaySeason)return;
+    let cancelled=false;
+    const loadEpisodes=async()=>{
+      setAnyplayEpisodesLoading(true);setAnyplayError("");
+      try{
+        const data=await api("/tv/"+item.id+"/season/"+anyplaySeason);
+        const episodes=(data.episodes||[]).filter(ep=>ep.episode_number>0);
+        if(!cancelled){setAnyplayEpisodes(episodes);setAnyplayEpisode(String(episodes[0]?.episode_number||1));}
+      }catch(e){if(!cancelled){setAnyplayEpisodes([]);setAnyplayError("Could not load episode list from TMDB: "+(e.message||"request failed"));}}
+      finally{if(!cancelled)setAnyplayEpisodesLoading(false);}
+    };
+    loadEpisodes();
+    return()=>{cancelled=true};
+  },[item.id,item.media_type,anyplaySeason]);
   const activateSource=(source)=>{setActiveSource(source);setShowTrailer(false);setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");setFakLoading(false);setYoutubeResults([]);setYoutubeError("");setYoutubeLoading(false);setArchiveResults([]);setArchiveError("");setArchiveLoading(false);};
   const [fakResults,setFakResults]=useState([]);
   const [fakLoading,setFakLoading]=useState(false);
@@ -382,12 +422,33 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   };
   const [autoWatchLoading,setAutoWatchLoading]=useState(false);
   const [autoWatchError,setAutoWatchError]=useState("");
+  const playAnyPlay=(serverId=anyplayServerId,season=anyplaySeason,episode=anyplayEpisode)=>{
+    if(!serverId){setAnyplayError("No AnyPlay server is available.");return;}
+    const isSeries=item.media_type==="tv";
+    const embedUrl="https://anyplay.stream/embed/movie/"+encodeURIComponent(serverId)+"/"+item.id+(isSeries?"/"+season+"/"+episode:"");
+    openPlayer({kind:"anyplay",source:"anyplay",embedUrl,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season:Number(season)||1,episode:Number(episode)||1,anyplayServers,serverId,title:titleOf(item),poster:img(item.poster_path,"w780"),description:item.overview||""});
+  };
   const watchNow=async()=>{
     if(autoWatchLoading)return;
     setAutoWatchLoading(true);setAutoWatchError("");setActiveSource("");
     const title=titleOf(item);
     try{
-      // Priority 1: configured Movies API. Only use its returned playback route.
+      // Priority 1: AnyPlay external server pool. Server IDs are loaded from its public API.
+      try{
+        const sr=await fetch("https://api.anyplay.stream/v1/servers");
+        const sp=await sr.json();
+        const servers=Array.isArray(sp)?sp:(sp.servers||sp.results||[]);
+        if(sr.ok&&servers.length){
+          const serverId=String(servers[0].id);
+          const isSeries=item.media_type==="tv";
+          const season=Number(item.seasons?.find(s=>s.season_number>0)?.season_number||1);
+          const episode=1;
+          const embedUrl="https://anyplay.stream/embed/movie/"+encodeURIComponent(serverId)+"/"+item.id+(isSeries?"/"+season+"/"+episode:"");
+          openPlayer({kind:"anyplay",source:"anyplay",embedUrl,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season,episode,anyplayServers:servers,serverId,title,poster:img(item.poster_path,"w780"),description:item.overview||""});
+          return;
+        }
+      }catch{}
+      // Priority 2: configured Movies API. Only use its returned playback route.
       try{
         const kind=item.media_type==="tv"?"all":"movie";
         const r=await fetch("/api/fak/search?q="+encodeURIComponent(title)+"&type="+kind);
@@ -451,6 +512,24 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
         </div>
       </div>
       <div className="details-body">
+        <div className="detail-block anyplay-block">
+          <div className="trailer-heading"><div><h3>Watch with AnyPlay</h3><span className="fak-powered">External streaming servers · ZXH OFFICIAL player</span></div><span className="anyplay-count">{anyplayServers.length||"—"} SERVERS</span></div>
+          {anyplayLoading&&<p>Loading all available AnyPlay servers…</p>}
+          {anyplayError&&<p className="fak-error">{anyplayError}</p>}
+          {!anyplayLoading&&anyplayServers.length>0&&<>
+            <div className="anyplay-controls">
+              <label><span>Streaming server</span><select value={anyplayServerId} onChange={e=>setAnyplayServerId(e.target.value)}>{anyplayServers.map((server,index)=><option key={server.id} value={server.id}>{server.name||"Server "+(index+1)}</option>)}</select></label>
+              {item.media_type==="tv"&&<>
+                <label><span>Season</span><select value={anyplaySeason} onChange={e=>setAnyplaySeason(e.target.value)}>{(item.seasons||[]).filter(s=>s.season_number>0).map(s=><option key={s.id||s.season_number} value={s.season_number}>Season {s.season_number}</option>)}</select></label>
+                <label><span>Episode</span><select value={anyplayEpisode} onChange={e=>setAnyplayEpisode(e.target.value)} disabled={anyplayEpisodesLoading||!anyplayEpisodes.length}>{anyplayEpisodes.map(ep=><option key={ep.id} value={ep.episode_number}>Episode {ep.episode_number}{ep.name?" · "+ep.name:""}</option>)}</select></label>
+              </>}
+              <button className="primary-btn anyplay-watch-btn" onClick={()=>playAnyPlay()} disabled={anyplayEpisodesLoading}><Play size={16} fill="currentColor"/> {anyplayEpisodesLoading?"Loading episodes…":"Watch on AnyPlay"}</button>
+            </div>
+            <div className="anyplay-server-list">{anyplayServers.map((server,index)=><button type="button" key={server.id} className={anyplayServerId===String(server.id)?"selected":""} onClick={()=>setAnyplayServerId(String(server.id))}><span>{server.name||"Server "+(index+1)}</span><small>{anyplayServerId===String(server.id)?"SELECTED":"AVAILABLE"}</small></button>)}</div>
+            {item.media_type==="tv"&&anyplayEpisodesLoading&&<p>Loading season episodes…</p>}
+          </>}
+          <p className="youtube-note">AnyPlay provides third-party iframe embeds. Playback availability depends on the selected external server.</p>
+        </div>
         {activeSource==="fak"&&(fakLoading||fakError||fakResults.length>0||fakEpisodes.length>0||fakPlayer)&&<div className="detail-block fak-block">
           <div className="trailer-heading"><div><h3>Watch with ZXH-OFFICIAL LAB CREW API</h3><span className="fak-powered">Powered by ZXH-OFFICIAL LAB CREW</span></div>{fakResults.length>0&&<button className="glass-btn" onClick={()=>{setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");}}>Reset</button>}</div>
           {fakLoading&&<p>Searching available sources…</p>}
@@ -538,6 +617,10 @@ function YouTubeAutoPlayer({entry}){
 
 function PlayerScreen({entry,onBack}){
   const detail=entry.detail||{};
+  const [activeAnyplayServer,setActiveAnyplayServer]=useState(String(entry.serverId||entry.anyplayServers?.[0]?.id||""));
+  const anyplayEmbedUrl=entry.source==="anyplay"&&activeAnyplayServer
+    ?"https://anyplay.stream/embed/movie/"+encodeURIComponent(activeAnyplayServer)+"/"+entry.tmdbId+(entry.mediaType==="tv"?"/"+entry.season+"/"+entry.episode:"")
+    :entry.embedUrl;
   const playerShellRef=useRef(null);
   const [isFullscreen,setIsFullscreen]=useState(false);
   const [forceLandscape,setForceLandscape]=useState(false);
@@ -549,7 +632,7 @@ function PlayerScreen({entry,onBack}){
   const embedPath="/api/fak/embed/"+entry.kind+"/"+encodeURIComponent(entry.id);
   return <main className="player-page">
     <div className="player-topbar">
-      <div className="player-controls"><button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button><button className="glass-btn" onClick={togglePlayerFullscreen}><span>{isFullscreen?"Exit Fullscreen":"Fullscreen"}</span></button></div>
+      <div className="player-controls"><button className="glass-btn" onClick={onBack}><ArrowLeft size={17}/> Back to discovery</button><button className="glass-btn" onClick={togglePlayerFullscreen}><span>{isFullscreen?"Exit Fullscreen":"Fullscreen"}</span></button>{entry.source==="anyplay"&&entry.anyplayServers?.length>0&&<label className="player-server-picker"><span>SERVER</span><select value={activeAnyplayServer} onChange={e=>setActiveAnyplayServer(e.target.value)}>{entry.anyplayServers.map((server,index)=><option key={server.id} value={server.id}>{server.name||"Server "+(index+1)}</option>)}</select></label>}</div>
       <span className="fak-powered">ZXH-OFFICIAL • MOVIES PLAYER</span>
     </div>
     <section className="player-heading">
@@ -557,7 +640,7 @@ function PlayerScreen({entry,onBack}){
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Playback powered by the authorized Movies API integration."}</p></div>
     </section>
     <section className={"player-shell"+(forceLandscape?" force-landscape":"")} ref={playerShellRef}>
-      {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe src={embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager"/>}
+      {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe key={entry.source==="anyplay"?anyplayEmbedUrl:embedPath} src={entry.source==="anyplay"?anyplayEmbedUrl:embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager" referrerPolicy="strict-origin-when-cross-origin"/>}
     </section>
     {entry.source==="youtube"&&<p className="youtube-note">YouTube video · played inside ZXH. YouTube attribution and player controls are retained.</p>}
     {entry.source!=="youtube"&&entry.source!=="archive"&&<div className="player-info-row">
