@@ -444,7 +444,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
       {id:"1",name:"SERVER 1",movie:id=>"https://stellarconductornexus.com/movie/"+id,tv:(id,s,e)=>"https://stellarconductornexus.com/tv/"+id+"/"+s+"/"+e},
       {id:"2",name:"SERVER 2",movie:id=>"https://vidlink.pro/movie/"+id,tv:(id,s,e)=>"https://vidlink.pro/tv/"+id+"/"+s+"/"+e},
       {id:"3",name:"SERVER 3",movie:id=>"https://player.vidzee.wtf/embed/movie/"+id,tv:(id,s,e)=>"https://player.vidzee.wtf/embed/tv/"+id+"/"+s+"/"+e},
-      {id:"4",name:"SERVER 4",movie:id=>"https://vidrock.net/movie/"+id,tv:(id,s,e)=>"https://vidrock.net/tv/"+id+"/"+s+"/"+e},
+      {id:"4",name:"SERVER 4",movie:id=>"https://vidrock.net/embed/movie/"+id,tv:(id,s,e)=>"https://vidrock.net/embed/tv/"+id+"/"+s+"/"+e},
       {id:"5",name:"SERVER 5",movie:id=>"https://vidnest.net/movie/"+id,tv:(id,s,e)=>"https://vidnest.net/tv/"+id+"/"+s+"/"+e}
     ];
     const makeUrl=(server)=>isSeries?server.tv(item.id,season,episode):server.movie(item.id);
