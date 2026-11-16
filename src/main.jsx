@@ -465,7 +465,8 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
       {id:"2",name:"SERVER 2",movie:id=>"https://player.vidzee.wtf/embed/movie/"+id,tv:(id,s,e)=>"https://player.vidzee.wtf/embed/tv/"+id+"/"+s+"/"+e},
       {id:"3",name:"SERVER 3",movie:id=>"https://vidrock.net/embed/movie/"+id,tv:(id,s,e)=>"https://vidrock.net/embed/tv/"+id+"/"+s+"/"+e},
       {id:"4",name:"SERVER 4",movie:id=>"https://vidnest.fun/movie/"+id,tv:(id,s,e)=>"https://vidnest.fun/tv/"+id+"/"+s+"/"+e},
-      {id:"5",name:"SERVER 5",movie:id=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id,tv:(id,s,e)=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id+"/"+s+"/"+e}
+      {id:"5",name:"SERVER 5",movie:id=>"https://cinesrc.st/embed/movie/"+id,tv:(id,s,e)=>"https://cinesrc.st/embed/tv/"+id+"?s="+s+"&e="+e},
+      {id:"6",name:"SERVER 6",movie:id=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id,tv:(id,s,e)=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id+"/"+s+"/"+e}
     ];
     const makeUrl=(server)=>isSeries?server.tv(item.id,season,episode):server.movie(item.id);
     openPlayer({kind:"stream",source:"direct-servers",serverIndex:0,servers,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season,episode,seasons:(item.seasons||[]).filter(x=>Number.isInteger(x.season_number)&&x.season_number>=0).map(x=>({number:x.season_number,name:x.name})),title:titleOf(item),poster:img(item.poster_path,"w780"),description:item.overview||""});
