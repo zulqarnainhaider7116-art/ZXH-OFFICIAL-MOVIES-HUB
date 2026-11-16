@@ -310,13 +310,13 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
     const loadServers=async()=>{
       setAnyplayLoading(true);setAnyplayError("");
       try{
-        const response=await fetch("https://api.anyplay.stream/v1/servers");
-        if(!response.ok)throw new Error("AnyPlay servers request failed (HTTP "+response.status+").");
+        const response=await fetch("/api/stream/servers");
+        if(!response.ok)throw new Error("Playback options unavailable.");
         const payload=await response.json();
         const servers=Array.isArray(payload)?payload:(payload.servers||payload.results||[]);
-        if(!servers.length)throw new Error("AnyPlay did not return any available servers.");
+        if(!servers.length)throw new Error("Playback options unavailable.");
         if(!cancelled){setAnyplayServers(servers);setAnyplayServerId(String(servers[0].id));}
-      }catch(e){if(!cancelled)setAnyplayError(e.message||"Unable to load AnyPlay servers.");}
+      }catch(e){if(!cancelled)setAnyplayError(e.message||"Unable to load playback options.");}
       finally{if(!cancelled)setAnyplayLoading(false);}
     };
     loadServers();
@@ -423,7 +423,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const [autoWatchLoading,setAutoWatchLoading]=useState(false);
   const [autoWatchError,setAutoWatchError]=useState("");
   const playAnyPlay=(serverId=anyplayServerId,season=anyplaySeason,episode=anyplayEpisode)=>{
-    if(!serverId){setAnyplayError("No AnyPlay server is available.");return;}
+    if(!serverId){setAnyplayError("No playback option is available.");return;}
     const isSeries=item.media_type==="tv";
     const embedUrl="https://anyplay.stream/embed/movie/"+encodeURIComponent(serverId)+"/"+item.id+(isSeries?"/"+season+"/"+episode:"");
     openPlayer({kind:"anyplay",source:"anyplay",embedUrl,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season:Number(season)||1,episode:Number(episode)||1,anyplayServers,serverId,title:titleOf(item),poster:img(item.poster_path,"w780"),description:item.overview||""});
@@ -435,7 +435,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
     try{
       // Priority 1: AnyPlay external server pool. Server IDs are loaded from its public API.
       try{
-        const sr=await fetch("https://api.anyplay.stream/v1/servers");
+        const sr=await fetch("/api/stream/servers");
         const sp=await sr.json();
         const servers=Array.isArray(sp)?sp:(sp.servers||sp.results||[]);
         if(sr.ok&&servers.length){
