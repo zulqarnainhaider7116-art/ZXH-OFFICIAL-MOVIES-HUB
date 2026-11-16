@@ -208,6 +208,9 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
   const [fakError,setFakError]=useState("");
   const [fakEpisodes,setFakEpisodes]=useState([]);
   const [fakPlayer,setFakPlayer]=useState(null);
+  const [archiveResults,setArchiveResults]=useState([]);
+  const [archiveLoading,setArchiveLoading]=useState(false);
+  const [archiveError,setArchiveError]=useState("");
   const findFakTitle=async()=>{
     setFakLoading(true);setFakError("");setFakResults([]);setFakEpisodes([]);setFakPlayer(null);
     try{
@@ -253,6 +256,17 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
       finally{setFakLoading(false);}
     }
   };
+  const findArchiveStreams=async()=>{
+    setArchiveLoading(true);setArchiveError("");setArchiveResults([]);
+    try{
+      const response=await fetch("/api/archive/search?q="+encodeURIComponent(titleOf(item)));
+      const payload=await response.json();
+      if(!response.ok||payload.error) throw new Error(payload.error?.message||"Public-domain source search failed.");
+      setArchiveResults(payload.results||[]);
+      if(!(payload.results||[]).length)setArchiveError("No verified public-domain / Creative Commons playable copy was found for this title.");
+    }catch(e){setArchiveError(e.message||"Unable to search legal free sources.");}
+    finally{setArchiveLoading(false);}
+  };
   const trailer=item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Trailer"&&v.key)
     || item.videos?.results?.find(v=>v.site==="YouTube"&&v.type==="Teaser"&&v.key);
   const cast=item.credits?.cast?.slice(0,8)||[];
@@ -269,7 +283,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
             <h1>{titleOf(item)}</h1>
             <div className="meta"><span className="rating"><Star size={14} fill="currentColor"/> {scoreOf(item)}</span><span>{yearOf(item)||"—"}</span><span>{item.runtime?`${item.runtime} min`:item.number_of_seasons?`${item.number_of_seasons} Seasons`:"HD"}</span></div>
             <p>{item.overview || "No overview available."}</p>
-            <div className="hero-actions"><button className="primary-btn" onClick={findFakTitle}><Play size={17} fill="currentColor"/> Watch Full {item.media_type==="tv"?"Series":"Movie"}</button><button className="glass-btn" onClick={()=>setShowTrailer(true)} disabled={!trailer}><Play size={17} fill="currentColor"/> {trailer?"Play Trailer":"Trailer Unavailable"}</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button>{trailer&&<a className="glass-btn" href={`https://www.youtube.com/watch?v=${trailer.key}`} target="_blank" rel="noreferrer"><Play size={16}/> YouTube</a>}</div>
+            <div className="hero-actions"><button className="primary-btn" onClick={findFakTitle}><Play size={17} fill="currentColor"/> Watch Full {item.media_type==="tv"?"Series":"Movie"}</button><button className="glass-btn" onClick={findArchiveStreams}>Free Legal Sources</button><button className="glass-btn" onClick={()=>setShowTrailer(true)} disabled={!trailer}><Play size={17} fill="currentColor"/> {trailer?"Play Trailer":"Trailer Unavailable"}</button><button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check/>:<Plus/>}{saved?" In My List":" Add to List"}</button>{trailer&&<a className="glass-btn" href={`https://www.youtube.com/watch?v=${trailer.key}`} target="_blank" rel="noreferrer"><Play size={16}/> YouTube</a>}</div>
             <div className="genres">{item.genres?.map(g=><span key={g.id}>{g.name}</span>)}</div>
           </div>
         </div>
@@ -282,6 +296,14 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
           {fakResults.length>0&&<div className="fak-results">{fakResults.map((result,index)=><button className="fak-result" key={result.id||index} onClick={()=>chooseFakResult(result)}><img src={result.image||""} alt="" loading="lazy"/><span><strong>{result.title}</strong><small>{result.year||"Year unavailable"} · {result.type} {result.views?"· "+result.views+" views":""}</small></span><ChevronRight size={18}/></button>)}</div>}
           {fakEpisodes.length>0&&<div className="fak-results">{fakEpisodes.map((episode,index)=><button className="fak-result fak-episode" key={episode.id||index} onClick={()=>openPlayer({kind:"episode",id:episode.id,title:episode.title||"Episode "+(episode.episode||index+1),detail:episode})}><span className="episode-number">{episode.episode||index+1}</span><span><strong>{episode.title||"Episode "+(episode.episode||index+1)}</strong><small>Season {episode.season||1} · Episode {episode.episode||index+1}</small></span><Play size={17}/></button>)}</div>}
           {fakPlayer&&<button className="primary-btn" onClick={()=>openPlayer(fakPlayer)}><Play size={16}/> Open separate player</button>}
+        </div>}
+        {(archiveLoading||archiveError||archiveResults.length>0)&&<div className="detail-block archive-block">
+          <div className="trailer-heading"><div><h3>Free Legal Streaming Sources</h3><span className="fak-powered">Internet Archive · verified license metadata</span></div></div>
+          {archiveLoading&&<p>Searching public-domain and Creative Commons videos…</p>}
+          {archiveError&&<p className="fak-error">{archiveError}</p>}
+          {archiveResults.map((source,index)=><button className="fak-result" key={source.id+"-"+index} onClick={()=>openPlayer({kind:"archive",source:"archive",id:source.id,title:source.title,poster:source.poster,streamUrl:source.url,format:source.format,license:source.license})}>
+            <span className="episode-number"><Play size={15}/></span><span><strong>{source.title}</strong><small>{source.format} · {source.license}</small></span><ChevronRight size={18}/>
+          </button>)}
         </div>}
         {showTrailer&&trailer&&<div className="detail-block trailer-block"><div className="trailer-heading"><h3>Now Playing · {titleOf(item)} Trailer</h3><button className="glass-btn" onClick={()=>setShowTrailer(false)}><X size={15}/> Close</button></div><div className="trailer-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0&modestbranding=1`} title={`${titleOf(item)} trailer`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen/></div></div>}
         <div className="detail-block"><h3>About this title</h3><p>{item.overview || "No description available."}</p></div>
@@ -309,8 +331,9 @@ function PlayerScreen({entry,onBack}){
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Playback powered by the authorized Movies API integration."}</p></div>
     </section>
     <section className="player-shell">
-      <iframe src={embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager"/>
+      {entry.source==="archive" ? <video className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : <iframe src={embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager"/>}
     </section>
+    {entry.source==="archive"&&<div className="player-info-row"><div><strong>Source</strong><span>Internet Archive</span></div><div><strong>Rights</strong><span>{entry.license||"See source item license"}</span></div><div><strong>Format</strong><span>{entry.format||"Browser video"}</span></div></div>}
     <div className="player-info-row">
       <div><strong>Available servers</strong><span>{streams.length?streams.length+" server option(s) supplied by the API":"Server switching is provided by the embedded player."}</span></div>
       <div><strong>Downloads</strong><span>{downloads.length?downloads.length+" option(s) supplied by the API":"No separate download options returned."}</span></div>
