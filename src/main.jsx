@@ -441,7 +441,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
     const season=Number(item.seasons?.find(s=>s.season_number>0)?.season_number||1);
     const episode=1;
     const servers=[
-      {id:"1",name:"SERVER 1",movie:id=>"https://stellarconductornexus.com/movie/"+id,tv:(id,s,e)=>"https://stellarconductornexus.com/tv/"+id+"/"+s+"/"+e},
+      {id:"1",name:"SERVER 1",movie:id=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id,tv:(id,s,e)=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id+"/"+s+"/"+e},
       {id:"2",name:"SERVER 2",movie:id=>"https://vidlink.pro/movie/"+id,tv:(id,s,e)=>"https://vidlink.pro/tv/"+id+"/"+s+"/"+e},
       {id:"3",name:"SERVER 3",movie:id=>"https://player.vidzee.wtf/embed/movie/"+id,tv:(id,s,e)=>"https://player.vidzee.wtf/embed/tv/"+id+"/"+s+"/"+e},
       {id:"4",name:"SERVER 4",movie:id=>"https://vidrock.net/embed/movie/"+id,tv:(id,s,e)=>"https://vidrock.net/embed/tv/"+id+"/"+s+"/"+e},
