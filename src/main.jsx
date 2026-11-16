@@ -445,7 +445,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
       {id:"2",name:"SERVER 2",movie:id=>"https://vidlink.pro/movie/"+id,tv:(id,s,e)=>"https://vidlink.pro/tv/"+id+"/"+s+"/"+e},
       {id:"3",name:"SERVER 3",movie:id=>"https://player.vidzee.wtf/embed/movie/"+id,tv:(id,s,e)=>"https://player.vidzee.wtf/embed/tv/"+id+"/"+s+"/"+e},
       {id:"4",name:"SERVER 4",movie:id=>"https://vidrock.net/embed/movie/"+id,tv:(id,s,e)=>"https://vidrock.net/embed/tv/"+id+"/"+s+"/"+e},
-      {id:"5",name:"SERVER 5",movie:id=>"https://vidnest.net/movie/"+id,tv:(id,s,e)=>"https://vidnest.net/tv/"+id+"/"+s+"/"+e}
+      {id:"5",name:"SERVER 5",movie:id=>"https://vidnest.fun/movie/"+id,tv:(id,s,e)=>"https://vidnest.fun/tv/"+id+"/"+s+"/"+e}
     ];
     const makeUrl=(server)=>isSeries?server.tv(item.id,season,episode):server.movie(item.id);
     openPlayer({kind:"stream",source:"direct-servers",serverIndex:0,servers,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season,episode,title:titleOf(item),poster:img(item.poster_path,"w780"),description:item.overview||""});
