@@ -85,3 +85,8 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 .player-download-list a{font-size:12px}
 .player-credit{text-align:center;color:var(--muted);font-size:10px;letter-spacing:1.5px;margin:45px 0 0}
 @media(max-width:650px){.player-page{padding:88px 14px 100px}.player-topbar{align-items:flex-start;flex-direction:column}.player-heading{align-items:flex-start}.player-heading>img{width:62px;height:92px}.player-shell{border-radius:12px;min-height:190px}.player-info-row>div{flex:1;min-width:135px}}
+
+
+/* ZXH authorized public-domain playback */
+.archive-video{position:absolute;inset:0;width:100%;height:100%;background:#000;object-fit:contain}
+.archive-block .fak-result{margin-top:9px}
