@@ -174,7 +174,7 @@ function App(){
 
   return <div className="app">
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
-    <Header search={search} setSearch={setSearch} submit={doSearch} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page}/>
+    <Header search={search} setSearch={setSearch} submit={doSearch} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory}/>
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen"><LoaderCircle className="spin" size={34}/><span>Loading cinema…</span></div> :
       <>
