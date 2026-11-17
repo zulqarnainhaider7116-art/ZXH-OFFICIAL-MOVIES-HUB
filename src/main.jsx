@@ -154,6 +154,15 @@ function App(){
   },[]);
 
   useEffect(()=>{
+    if(page!=="home"||heroItems.length<2)return;
+    let index=Math.max(0,heroItems.findIndex(item=>item.id===hero?.id));
+    const timer=window.setInterval(()=>{
+      index=(index+1)%heroItems.length;
+      setHero(heroItems[index]);
+    },5000);
+    return ()=>window.clearInterval(timer);
+  },[heroItems,page]);
+  useEffect(()=>{
     if(!selected) return;
     document.body.style.overflow="hidden";
     const onKey=e=>e.key==="Escape" && setSelected(null);
@@ -334,6 +343,7 @@ function App(){
     {loading && !hero ? <div className="loading-screen" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Preparing your cinema experience…</span></div> :
       <>
         {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : page==="live" ? <><Suspense fallback={<div className="loading-screen live-route-loading" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Opening Live TV…</span></div>}><LiveTV/></Suspense><Footer/></> : <>
+        {page==="home" && hero && <Hero item={hero} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved(hero.id)} onBrowse={go}/>}
         <main className={page==="home" ? "content home-content":"content"}>
           {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
@@ -409,7 +419,7 @@ function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,cho
   </header>
 }
 
-function Hero({item,openDetails,toggleWatch,saved}){
+function Hero({item,openDetails,toggleWatch,saved,onBrowse}){
   return <section className="hero" style={{"--hero":`url(${backdrop(item.backdrop_path)})`}}>
     <div className="hero-shade"/>
     <div className="hero-content">
@@ -420,6 +430,10 @@ function Hero({item,openDetails,toggleWatch,saved}){
       <div className="hero-actions">
         <button className="primary-btn" onClick={()=>openDetails(item)}><Play size={17} fill="currentColor"/> Watch Details</button>
         <button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check size={17}/>:<Plus size={17}/>} {saved?"In My List":"My List"}</button>
+      </div>
+      <div className="hero-browse-links" aria-label="Browse movies and TV series">
+        <button type="button" onClick={()=>onBrowse("movie")}><Film size={15}/> Movies</button>
+        <button type="button" onClick={()=>onBrowse("tv")}><Tv size={15}/> TV Series</button>
       </div>
     </div>
     <div className="hero-poster"><img src={img(item.poster_path,"w780")} alt={titleOf(item)} loading="eager"/></div>
