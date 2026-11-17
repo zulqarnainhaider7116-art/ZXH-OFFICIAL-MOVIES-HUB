@@ -171,50 +171,19 @@ function App(){
   const loadAdultCatalog=async(key,type="movie")=>{
     setCategoryLoading(true);setCategoryError("");setCategoryData({});
     try{
-      const path=type==="tv"?"/discover/tv":"/discover/movie";
-      const prefix=key==="mature"?"Adult 18+":"Midnight 18+";
-      const mediaLabel=type==="tv"?"TV-MA Series":"Movies";
-      const genres=type==="tv"
-        ? [["Drama",18],["Crime",80],["Mystery",9648],["Action & Adventure",10759],["Sci-Fi & Fantasy",10765],["Comedy",35]]
-        : [["Drama",18],["Romance",10749],["Thriller",53],["Horror",27],["Crime",80],["Comedy",35],["Mystery",9648],["Science Fiction",878]];
-      const adultOnly=items=>{
-        const seen=new Set();
-        return items.filter(item=>{
-          // Movies must be explicitly marked adult by TMDB. TV is restricted at query-time to TV-MA.
-          if((type==="movie"&&item.adult!==true)||!item.poster_path||seen.has(item.id))return false;
-          seen.add(item.id);
-          return true;
-        }).map(item=>({...item,media_type:type}));
-      };
-      const baseRows=key==="midnight"
-        ? [["Latest","release_date.desc"],["Popular","popularity.desc"],["Top Rated","vote_average.desc"]]
-        : [["Trending","popularity.desc"],["Popular","vote_count.desc"],["Top Rated","vote_average.desc"]];
-      const queryFor=(sort,page,genreId)=>({
-        sort_by:sort,page,
-        ...(type==="movie"?{include_adult:"true"}:{certification_country:"US",certification:"TV-MA"}),
-        ...(genreId?{with_genres:String(genreId)}:{}),
-        ...(sort==="vote_average.desc"?{"vote_count.gte":"2"}:{})
-      });
-      const requests=[
-        ...baseRows.map(async([label,sort])=>{
-          const pages=await Promise.all([1,2].map(page=>api(path,queryFor(sort,page))));
-          return {label,items:pages.flatMap(data=>data.results||[])};
-        }),
-        ...genres.map(async([label,id])=>{
-          const pages=await Promise.all([1,2].map(page=>api(path,queryFor("popularity.desc",page,id))));
-          return {label:label+" "+prefix+" "+mediaLabel,items:pages.flatMap(data=>data.results||[])};
-        })
-      ];
-      const results=await Promise.all(requests);
-      const sections={};
-      results.forEach((row,index)=>{
-        const name=index<baseRows.length
-          ? row.label+" "+prefix+" "+mediaLabel
-          : row.label;
-        sections[name]=adultOnly(row.items);
-      });
-      setCategoryData(sections);
-    }catch(e){setCategoryError(e.message||"Unable to load adult collections.");}
+      const isTV=type==="tv";
+      const params=isTV
+        ? {certification_country:"US",certification:"TV-MA",sort_by:"popularity.desc"}
+        : {with_genres:"27,53,9648",include_adult:"true",sort_by:"primary_release_date.desc"};
+      const pages=await Promise.all([1,2,3].map(page=>api(isTV?"/discover/tv":"/discover/movie",{...params,page,...(!isTV?{ "vote_count.gte":"1" }:{})})));
+      const seen=new Set();
+      const items=pages.flatMap(data=>data.results||[]).filter(item=>{
+        if(!item.id||!item.poster_path||seen.has(item.id))return false;
+        seen.add(item.id);
+        return true;
+      }).map(item=>({...item,media_type:type}));
+      setCategoryData({[isTV?"Midnight TV Series":"Midnight Movies"]:items});
+    }catch(e){setCategoryError(e.message||"Unable to load Midnight collection.");}
     finally{setCategoryLoading(false);}
   };
   const [countryCode,setCountryCode]=useState("PK");
@@ -241,7 +210,7 @@ function App(){
   const chooseCategory=async(key,label)=>{
     setMobileOpen(false);
     if(key==="live"){setActiveCategory(key);go("live");return;}
-    if(key==="mature"||key==="midnight"){
+    if(key==="midnight"){
       setActiveCategory(key);setPage("category");setPlayer(null);
       setCatalogType("movie");
       window.scrollTo({top:0,behavior:"auto"});
@@ -345,7 +314,7 @@ function App(){
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
           {page==="category" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH COLLECTION</span><h1>{categoryLabels[activeCategory]||"Trending"}</h1><p>{activeCategory==="mature"?"Only titles explicitly marked as adult in TMDB. Browse adult movies and TV series.":activeCategory==="midnight"?"Adult-only midnight movies and TV series.":activeCategory==="series"?"Discover trending TV shows, web series, popular seasons and top-rated series.":"Explore separate trending, popular and top-rated picks in this collection."}</p></div></div>}
-          {page==="category"&&(activeCategory==="mature"||activeCategory==="midnight")&&<div className="catalog-filters" aria-label="Adult catalog filters">
+          {page==="category"&&(activeCategory==="midnight")&&<div className="catalog-filters" aria-label="Adult catalog filters">
             <div className="catalog-type-switch" role="group" aria-label="Content type">
               <button type="button" className={catalogType==="movie"?"active":""} onClick={()=>{setCatalogType("movie");loadAdultCatalog(activeCategory,"movie");}}>Movies</button>
               <button type="button" className={catalogType==="tv"?"active":""} onClick={()=>{setCatalogType("tv");loadAdultCatalog(activeCategory,"tv");}}>TV Shows &amp; Series</button>
@@ -397,7 +366,7 @@ function YouTubeSearchRow({items,loading,error,openPlayer}){
   </section>;
 }
 
-const categoryItems=[["Trending","trending"],["Movies","movies"],["Series","series"],["Adult 18+","mature"],["Midnight","midnight"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
+const categoryItems=[["Trending","trending"],["Movies","movies"],["Series","series"],["Midnight","midnight"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
 const categoryLabels=Object.fromEntries(categoryItems.map(([label,key])=>[key,label]));
 function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,chooseCategory,theme,toggleTheme,countryCode,countryOptions,loadCountry}){
   return <header className="header glass">
