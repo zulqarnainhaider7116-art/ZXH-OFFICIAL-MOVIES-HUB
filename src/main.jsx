@@ -172,32 +172,36 @@ function App(){
     setCategoryLoading(true);setCategoryError("");setCategoryData({});
     try{
       const path=type==="tv"?"/discover/tv":"/discover/movie";
-      const prefix=key==="mature"?"Adult":"Midnight Adult";
-      const mediaLabel=type==="tv"?"TV Shows & Web Series":"Movies";
+      const prefix=key==="mature"?"Adult 18+":"Midnight 18+";
+      const mediaLabel=type==="tv"?"TV-MA Series":"Movies";
       const genres=type==="tv"
-        ? [["Drama",18],["Crime",80],["Mystery",9648],["Action & Adventure",10759],["Sci-Fi & Fantasy",10765],["Comedy",35],["Soap",10766]]
+        ? [["Drama",18],["Crime",80],["Mystery",9648],["Action & Adventure",10759],["Sci-Fi & Fantasy",10765],["Comedy",35]]
         : [["Drama",18],["Romance",10749],["Thriller",53],["Horror",27],["Crime",80],["Comedy",35],["Mystery",9648],["Science Fiction",878]];
       const adultOnly=items=>{
         const seen=new Set();
         return items.filter(item=>{
-          if(item.adult!==true||!item.poster_path||seen.has(item.id))return false;
+          // Movies must be explicitly marked adult by TMDB. TV is restricted at query-time to TV-MA.
+          if((type==="movie"&&item.adult!==true)||!item.poster_path||seen.has(item.id))return false;
           seen.add(item.id);
           return true;
         }).map(item=>({...item,media_type:type}));
       };
-      const baseRows=[["Trending","popularity.desc"],["Popular","vote_count.desc"],["Top Rated","vote_average.desc"]];
+      const baseRows=key==="midnight"
+        ? [["Latest","release_date.desc"],["Popular","popularity.desc"],["Top Rated","vote_average.desc"]]
+        : [["Trending","popularity.desc"],["Popular","vote_count.desc"],["Top Rated","vote_average.desc"]];
+      const queryFor=(sort,page,genreId)=>({
+        sort_by:sort,page,
+        ...(type==="movie"?{include_adult:"true"}:{certification_country:"US",certification:"TV-MA"}),
+        ...(genreId?{with_genres:String(genreId)}:{}),
+        ...(sort==="vote_average.desc"?{"vote_count.gte":"2"}:{})
+      });
       const requests=[
-        ...baseRows.map(async ([label,sort])=>{
-          const pages=await Promise.all([1,2].map(page=>api(path,{
-            include_adult:"true",sort_by:sort,page,
-            ...(sort==="vote_average.desc"?{"vote_count.gte":"2"}:{})
-          })));
+        ...baseRows.map(async([label,sort])=>{
+          const pages=await Promise.all([1,2].map(page=>api(path,queryFor(sort,page))));
           return {label,items:pages.flatMap(data=>data.results||[])};
         }),
-        ...genres.map(async ([label,id])=>{
-          const pages=await Promise.all([1,2].map(page=>api(path,{
-            include_adult:"true",with_genres:String(id),sort_by:"popularity.desc",page
-          })));
+        ...genres.map(async([label,id])=>{
+          const pages=await Promise.all([1,2].map(page=>api(path,queryFor("popularity.desc",page,id))));
           return {label:label+" "+prefix+" "+mediaLabel,items:pages.flatMap(data=>data.results||[])};
         })
       ];
