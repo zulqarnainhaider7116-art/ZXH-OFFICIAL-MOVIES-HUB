@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import {
   Search, Home, Film, Tv, Heart, Clock3, UserRound, Menu, X, Play, Globe2,
   Plus, Check, Star, ChevronRight, ChevronLeft, Info, SlidersHorizontal,
-  Sparkles, Bookmark, History, ArrowLeft, LoaderCircle, AlertCircle, Radio, Sun, Moon
+  Sparkles, Bookmark, History, ArrowLeft, AlertCircle, Radio, Sun, Moon
 } from "lucide-react";
 import LiveTV from "./LiveTV.jsx";
 import "./styles.css";
@@ -275,7 +275,7 @@ function App(){
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
     <Header search={search} setSearch={setSearch} submit={doSearch} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} theme={theme} toggleTheme={toggleTheme} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
-    {loading && !hero ? <div className="loading-screen"><LoaderCircle className="spin" size={34}/><span>Loading cinema…</span></div> :
+    {loading && !hero ? <div className="loading-screen" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Preparing your cinema experience…</span></div> :
       <>
         {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : page==="live" ? <><LiveTV/><Footer/></> : <>
         {page==="home" && hero && <Hero item={hero} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved(hero.id)}/>}
@@ -379,9 +379,18 @@ function MovieRow({title,items,openDetails}){
 }
 
 function MovieCard({item,openDetails}){
-  return <button className="movie-card" onClick={()=>openDetails(item)}>
-    <div className="poster"><img src={img(item.poster_path,"w500")} alt={titleOf(item)} loading="lazy"/><div className="poster-gloss"/><span className="score"><Star size={11} fill="currentColor"/>{scoreOf(item)}</span><span className="quality">HD</span><span className="card-play"><Play size={18} fill="currentColor"/></span></div>
-    <div className="card-info"><strong>{titleOf(item)}</strong><span>{yearOf(item)||"—"} <i/> {item.media_type==="tv"||item.first_air_date?"TV":"Movie"}</span></div>
+  const isSeries=item.media_type==="tv"||!!item.first_air_date;
+  const seasonCount=Number(item.number_of_seasons||item.seasons?.filter(season=>season.season_number>0).length||0);
+  const posterLabel=isSeries?(seasonCount?`${seasonCount} ${seasonCount===1?"SEASON":"SEASONS"}`:"SERIES"):"HD";
+  return <button className="movie-card" onClick={()=>openDetails(item)} aria-label={`Open ${titleOf(item)} details`} title={titleOf(item)}>
+    <div className="poster">
+      <img src={img(item.poster_path,"w500")} alt={titleOf(item)} loading="lazy" decoding="async" onError={event=>{event.currentTarget.hidden=true;}}/>
+      <div className="poster-gloss"/>
+      <span className="score"><Star size={11} fill="currentColor"/>{scoreOf(item)}</span>
+      <span className={`quality${isSeries?" series-quality":""}`}>{posterLabel}</span>
+      <span className="card-play"><Play size={18} fill="currentColor"/></span>
+    </div>
+    <div className="card-info"><strong>{titleOf(item)}</strong><span>{yearOf(item)||"—"} <i/> {isSeries?"TV Series":"Movie"}{seasonCount?` · ${seasonCount} ${seasonCount===1?"Season":"Seasons"}`:""}</span></div>
   </button>
 }
 
