@@ -193,7 +193,27 @@ function App(){
       let path="/discover/movie",params={},type="movie",fixedRows=null;
       if(key==="trending"){fixedRows=[["Trending This Week",()=>api("/trending/all/week")],["Trending Movies",()=>api("/trending/movie/week")],["Trending Series",()=>api("/trending/tv/week")],["Popular Movies",()=>api("/movie/popular")],["Popular Series",()=>api("/tv/popular")]];}
       else if(key==="movies"){fixedRows=[["Trending",()=>api("/trending/movie/week")],["Popular",()=>api("/movie/popular")],["Top Rated",()=>api("/movie/top_rated")],["Now Playing",()=>api("/movie/now_playing")]];}
-      else if(key==="series"){type="tv";fixedRows=[["Trending",()=>api("/trending/tv/week")],["Popular",()=>api("/tv/popular")],["Top Rated",()=>api("/tv/top_rated")],["Currently Airing",()=>api("/tv/on_the_air")]];}
+      else if(key==="series"){type="tv";fixedRows=[["Trending TV Shows & Web Series",()=>api("/trending/tv/week")],["Popular Series",()=>api("/tv/popular")],["Top Rated Series",()=>api("/tv/top_rated")],["Currently Airing",()=>api("/tv/on_the_air")]];}
+      else if(key==="mature"){
+        fixedRows=[
+          ["Trending 18+ Movies",()=>api("/discover/movie",{certification_country:"US","certification.gte":"R",include_adult:"false",sort_by:"popularity.desc"})],
+          ["Trending TV-MA Series",()=>api("/discover/tv",{certification_country:"US",certification:"TV-MA",sort_by:"popularity.desc"})],
+          ["Popular 18+ Movies",()=>api("/discover/movie",{certification_country:"US","certification.gte":"R",include_adult:"false",sort_by:"vote_count.desc"})],
+          ["Popular TV-MA Series",()=>api("/discover/tv",{certification_country:"US",certification:"TV-MA",sort_by:"vote_count.desc"})],
+          ["Top Rated 18+ Movies",()=>api("/discover/movie",{certification_country:"US","certification.gte":"R",include_adult:"false",sort_by:"vote_average.desc","vote_count.gte":50})],
+          ["Top Rated TV-MA Series",()=>api("/discover/tv",{certification_country:"US",certification:"TV-MA",sort_by:"vote_average.desc","vote_count.gte":50})]
+        ];
+      }
+      else if(key==="midnight"){
+        fixedRows=[
+          ["Trending Midnight Movies",()=>api("/discover/movie",{with_genres:"27|53|9648|80",sort_by:"popularity.desc"})],
+          ["Trending Midnight Series",()=>api("/discover/tv",{with_genres:"80|9648|10765|18",sort_by:"popularity.desc"})],
+          ["Popular Midnight Movies",()=>api("/discover/movie",{with_genres:"27|53|9648|80",sort_by:"vote_count.desc"})],
+          ["Popular Midnight Series",()=>api("/discover/tv",{with_genres:"80|9648|10765|18",sort_by:"vote_count.desc"})],
+          ["Top Rated Midnight Movies",()=>api("/discover/movie",{with_genres:"27|53|9648|80",sort_by:"vote_average.desc","vote_count.gte":50})],
+          ["Top Rated Midnight Series",()=>api("/discover/tv",{with_genres:"80|9648|10765|18",sort_by:"vote_average.desc","vote_count.gte":50})]
+        ];
+      }
       else if(key==="anime"){path="/discover/tv";type="tv";params={with_genres:"16",with_original_language:"ja"};}
       else if(key==="bollywood"){params={with_original_language:"hi",region:"IN"};}
       else if(key==="hollywood"){params={with_original_language:"en",region:"US"};}
@@ -283,7 +303,7 @@ function App(){
           {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
-          {page==="category" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH COLLECTION</span><h1>{categoryLabels[activeCategory]||"Trending"}</h1><p>Explore separate trending, popular and top-rated picks in this collection.</p></div></div>}
+          {page==="category" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH COLLECTION</span><h1>{categoryLabels[activeCategory]||"Trending"}</h1><p>{activeCategory==="mature"?"Mainstream 18+ rated films and TV-MA series, organized by trending, popularity and ratings.":activeCategory==="midnight"?"Late-night horror, thriller, mystery and crime movies, TV shows and web series.":activeCategory==="series"?"Discover trending TV shows, web series, popular seasons and top-rated series.":"Explore separate trending, popular and top-rated picks in this collection."}</p></div></div>}
           {page==="category"&&categoryLoading&&<p className="country-loading">Building your {categoryLabels[activeCategory]||"category"} collection…</p>}
           {page==="category"&&categoryError&&<p className="fak-error">{categoryError}</p>}
           {page==="country" && <div className="page-head category-page-head"><div><span className="eyebrow">COUNTRY COLLECTION</span><h1>{countryOptions.find(x=>x[0]===countryCode)?.[1]||countryCode}</h1><p>Movies, genres, anime and television from your selected country.</p></div></div>}
@@ -330,7 +350,7 @@ function YouTubeSearchRow({items,loading,error,openPlayer}){
   </section>;
 }
 
-const categoryItems=[["Trending","trending"],["Movies","movies"],["Series","series"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
+const categoryItems=[["Trending","trending"],["Movies","movies"],["Series","series"],["18+ Mature","mature"],["Midnight","midnight"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
 const categoryLabels=Object.fromEntries(categoryItems.map(([label,key])=>[key,label]));
 function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,chooseCategory,theme,toggleTheme,countryCode,countryOptions,loadCountry}){
   return <header className="header glass">
