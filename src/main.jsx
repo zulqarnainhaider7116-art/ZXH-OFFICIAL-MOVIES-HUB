@@ -33,7 +33,7 @@ function App(){
   const [page,setPage] = useState("home");
   const [theme,setTheme]=useState(()=>localStorage.getItem("zxh-theme")==="dark"?"dark":"light");
   const toggleTheme=()=>setTheme(current=>{const next=current==="light"?"dark":"light";localStorage.setItem("zxh-theme",next);return next;});
-  useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
+  useEffect(()=>{document.documentElement.dataset.theme=theme;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute("content",theme==="light"?"#f8f0f7":"#0e1513");},[theme]);
   const [mobileOpen,setMobileOpen] = useState(false);
   const [hero,setHero] = useState(null);
   const [rows,setRows] = useState({});
@@ -191,7 +191,8 @@ function App(){
     window.scrollTo({top:0,behavior:"smooth"});
     try{
       let path="/discover/movie",params={},type="movie",fixedRows=null;
-      if(key==="movies"){fixedRows=[["Trending",()=>api("/trending/movie/week")],["Popular",()=>api("/movie/popular")],["Top Rated",()=>api("/movie/top_rated")],["Now Playing",()=>api("/movie/now_playing")]];}
+      if(key==="trending"){fixedRows=[["Trending This Week",()=>api("/trending/all/week")],["Trending Movies",()=>api("/trending/movie/week")],["Trending Series",()=>api("/trending/tv/week")],["Popular Movies",()=>api("/movie/popular")],["Popular Series",()=>api("/tv/popular")]];}
+      else if(key==="movies"){fixedRows=[["Trending",()=>api("/trending/movie/week")],["Popular",()=>api("/movie/popular")],["Top Rated",()=>api("/movie/top_rated")],["Now Playing",()=>api("/movie/now_playing")]];}
       else if(key==="series"){type="tv";fixedRows=[["Trending",()=>api("/trending/tv/week")],["Popular",()=>api("/tv/popular")],["Top Rated",()=>api("/tv/top_rated")],["Currently Airing",()=>api("/tv/on_the_air")]];}
       else if(key==="anime"){path="/discover/tv";type="tv";params={with_genres:"16",with_original_language:"ja"};}
       else if(key==="bollywood"){params={with_original_language:"hi",region:"IN"};}
