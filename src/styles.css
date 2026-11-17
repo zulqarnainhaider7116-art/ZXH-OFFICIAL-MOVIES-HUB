@@ -1382,3 +1382,43 @@ body{background:var(--bg)!important}
   .app .content:not(.home-content){padding:18px 17px 110px!important}
   .app .content:not(.home-content) .category-page-head{padding-top:4px!important;margin-bottom:20px!important}
 }
+
+
+/* ZXH OFFICIAL — final theme isolation + no-flash rendering */
+html,body{min-height:100%;background:#0e1513!important}
+html[data-theme="light"],html[data-theme="light"] body{background:#f8f0f7!important;color:#17372d!important;color-scheme:light}
+html[data-theme="dark"],html[data-theme="dark"] body{background:#0e1513!important;color:#f0f5f1!important;color-scheme:dark}
+.app[data-theme="light"]{background:#f8f0f7!important;background-image:none!important;color:#17372d!important}
+.app[data-theme="dark"]{background:#0e1513!important;background-image:none!important;color:#f0f5f1!important}
+.app[data-theme="light"] .details-modal,
+.app[data-theme="light"] .details-body,
+.app[data-theme="light"] .detail-block{background:#fffafd!important;color:#17372d!important;border-color:#e6eee8!important}
+.app[data-theme="dark"] .details-modal,
+.app[data-theme="dark"] .details-body,
+.app[data-theme="dark"] .detail-block{background:#17211d!important;color:#f0f5f1!important;border-color:#ffffff22!important}
+.app[data-theme="light"] .details-copy h1,
+.app[data-theme="light"] .details-body h3,
+.app[data-theme="light"] .details-body p,
+.app[data-theme="light"] .details-body strong{color:#17372d!important}
+.app[data-theme="dark"] .details-copy h1,
+.app[data-theme="dark"] .details-body h3,
+.app[data-theme="dark"] .details-body p,
+.app[data-theme="dark"] .details-body strong{color:#f0f5f1!important}
+.app[data-theme="light"] .details-copy p{color:#5e7066!important}
+.app[data-theme="dark"] .details-copy p{color:#bdc9c0!important}
+.app[data-theme="light"] .details-modal .fak-result,
+.app[data-theme="light"] .details-modal .cast-item{background:#f5faf6!important;color:#17372d!important}
+.app[data-theme="dark"] .details-modal .fak-result,
+.app[data-theme="dark"] .details-modal .cast-item{background:#202d26!important;color:#f0f5f1!important}
+/* Remove animated/transitional repaint sources across the whole app, not just the hero. */
+.app,.app *,.app *::before,.app *::after{
+  animation:none!important;
+  transition:none!important;
+  scroll-behavior:auto!important;
+  caret-color:auto;
+}
+.app,.app .header,.app .category-nav,.app .mobile-nav,.app .glass{
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.app .ambient,.app .grain{display:none!important}
