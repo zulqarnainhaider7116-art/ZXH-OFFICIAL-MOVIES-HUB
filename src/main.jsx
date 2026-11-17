@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 const LiveTV = React.lazy(() => import("./LiveTV.jsx"));
 import "./styles.css";
+import TmdbUniverse from "./TmdbUniverse.jsx";
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || "5842b1e115a82d3dd7d335874888c943";
 const API_BASE = import.meta.env.VITE_TMDB_BASE_URL || "https://api.themoviedb.org/3";
@@ -26,7 +27,7 @@ const scoreOf = x => Number(x?.vote_average || 0).toFixed(1);
 
 const navItems = [
   ["Home", Home, "home"], ["Movies", Film, "movie"], ["Series", Tv, "tv"],
-  ["Live TV", Radio, "live"], ["My List", Heart, "list"], ["History", Clock3, "history"]
+  ["Live TV", Radio, "live"], ["TMDB Universe", Sparkles, "universe"], ["My List", Heart, "list"], ["History", Clock3, "history"]
 ];
 
 function App(){
@@ -233,6 +234,7 @@ function App(){
   const chooseCategory=async(key,label)=>{
     setMobileOpen(false);
     if(key==="live"){setActiveCategory(key);go("live");return;}
+    if(key==="universe"){setActiveCategory(key);go("universe");return;}
     if(key==="mature"||key==="midnight"){
       setActiveCategory(key);setPage("category");setPlayer(null);
       setCatalogType("movie");
@@ -314,6 +316,7 @@ function App(){
   };
 
   const sectionData = useMemo(()=>{
+    if(page==="universe") return {};
     if(page==="list") return {"My List":watchlist};
     if(page==="history") return {"Continue Exploring":history};
     if(page==="movie") return {"Popular Movies":rows["Popular Movies"]||[],"Top Rated":rows["Top Rated"]||[]};
@@ -333,6 +336,8 @@ function App(){
         {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : page==="live" ? <><Suspense fallback={<div className="loading-screen live-route-loading" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Opening Live TV…</span></div>}><LiveTV/></Suspense><Footer/></> : <>
         {page==="home" && hero && <Hero item={hero} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved(hero.id)}/>}
         <main className={page==="home" ? "content home-content":"content"}>
+          {page==="universe" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH OFFICIAL · TMDB DATA LIBRARY</span><h1>TMDB Universe</h1><p>Explore movies, series, people, franchises, genres, studios, networks and regional streaming providers.</p></div></div>}
+          {page==="universe" && <TmdbUniverse api={api} img={img} titleOf={titleOf} scoreOf={scoreOf} yearOf={yearOf} openDetails={openDetails}/>}
           {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
@@ -350,7 +355,7 @@ function App(){
           {page==="country"&&countryError&&<p className="fak-error">{countryError}</p>}
           {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}
           {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
-          {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && !(page==="country"&&countryLoading) && <Empty page={page}/>}
+          {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && !(page==="country"&&countryLoading) && page!=="universe" && <Empty page={page}/>}
         </main>
         <Footer/>
         </>}
@@ -389,7 +394,7 @@ function YouTubeSearchRow({items,loading,error,openPlayer}){
   </section>;
 }
 
-const categoryItems=[["Trending","trending"],["Movies","movies"],["Series","series"],["Adult 18+","mature"],["Midnight","midnight"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
+const categoryItems=[["Trending","trending"],["TMDB Universe","universe"],["Movies","movies"],["Series","series"],["Adult 18+","mature"],["Midnight","midnight"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
 const categoryLabels=Object.fromEntries(categoryItems.map(([label,key])=>[key,label]));
 function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,chooseCategory,theme,toggleTheme,countryCode,countryOptions,loadCountry}){
   return <header className="header glass">
