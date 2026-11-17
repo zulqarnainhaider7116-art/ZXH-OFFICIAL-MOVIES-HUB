@@ -1156,3 +1156,40 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
   .app .live-video-wrap{max-height:none;aspect-ratio:16/9}
 }
 .app .live-player-modal,.app .live-player-modal *{box-sizing:border-box}
+
+
+/* ZXH adult collections — responsive genre and media filters */
+.catalog-filters{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin:-12px 0 38px;padding:13px;
+  border:1px solid var(--line);border-radius:19px;
+  background:var(--panel);box-shadow:0 12px 34px rgba(0,0,0,.08);
+}
+.catalog-type-switch{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.catalog-type-switch button{
+  min-height:42px;padding:0 17px;border:1px solid var(--line);
+  border-radius:12px;background:var(--panel2);color:var(--muted);
+  font-size:12px;font-weight:800;transition:background .2s,color .2s,border-color .2s;
+}
+.catalog-type-switch button.active{
+  color:var(--bg);background:var(--text);border-color:var(--text);
+  box-shadow:0 5px 16px rgba(0,0,0,.12);
+}
+.catalog-genre-picker{display:grid;grid-template-columns:auto minmax(150px,220px);align-items:center;gap:10px}
+.catalog-genre-picker span{
+  color:var(--muted);font-size:9px;font-weight:900;letter-spacing:1.4px
+}
+.catalog-genre-picker select{
+  width:100%;height:42px;padding:0 13px;border:1px solid var(--line);
+  border-radius:12px;background:var(--panel2);color:var(--text);
+  font:inherit;font-size:12px;font-weight:700;outline:none;
+}
+.catalog-genre-picker select:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.catalog-genre-picker option{background:var(--bg);color:var(--text)}
+@media(max-width:700px){
+  .catalog-filters{display:grid;grid-template-columns:1fr;gap:11px;margin:-7px 0 30px;padding:11px;border-radius:16px}
+  .catalog-type-switch{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .catalog-type-switch button{min-width:0;padding:0 8px;font-size:10px}
+  .catalog-genre-picker{grid-template-columns:52px minmax(0,1fr);gap:8px}
+  .catalog-genre-picker select{height:44px;min-width:0}
+}
