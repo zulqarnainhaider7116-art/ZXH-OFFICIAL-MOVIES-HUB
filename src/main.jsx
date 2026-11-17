@@ -37,6 +37,7 @@ function App(){
   useEffect(()=>{document.documentElement.dataset.theme=theme;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute("content",theme==="light"?"#f8f0f7":"#0e1513");},[theme]);
   const [mobileOpen,setMobileOpen] = useState(false);
   const [hero,setHero] = useState(null);
+  const [heroItems,setHeroItems] = useState([]);
   const [rows,setRows] = useState({});
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState("");
@@ -136,6 +137,7 @@ function App(){
         ]);
         const clean=a=>a.results?.filter(x=>x.poster_path) || [];
         const trend=clean(trending);
+        setHeroItems(trend.slice(0,5));
         setHero(trend[0]);
         setRows({
           "Trending This Week":trend,
@@ -349,7 +351,7 @@ function App(){
           {page==="country" && <div className="page-head category-page-head"><div><span className="eyebrow">COUNTRY COLLECTION</span><h1>{countryOptions.find(x=>x[0]===countryCode)?.[1]||countryCode}</h1><p>Movies, genres, anime and television from your selected country.</p></div></div>}
           {page==="country"&&countryLoading&&<p className="country-loading">Loading country collections…</p>}
           {page==="country"&&countryError&&<p className="fak-error">{countryError}</p>}
-          {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}
+          {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}\n          {page==="home" && <TmdbUniverse api={api} openDetails={openDetails} MovieRow={MovieRow}/>}
           {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
           {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && !(page==="country"&&countryLoading) && page!=="home" && <Empty page={page}/>}
         </main>
