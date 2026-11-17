@@ -1,11 +1,11 @@
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import React, {Suspense, useEffect, useMemo, useRef, useState} from "react";
 import { createRoot } from "react-dom/client";
 import {
   Search, Home, Film, Tv, Heart, Clock3, UserRound, Menu, X, Play, Globe2,
   Plus, Check, Star, ChevronRight, ChevronLeft, Info, SlidersHorizontal,
   Sparkles, Bookmark, History, ArrowLeft, AlertCircle, Radio, Sun, Moon
 } from "lucide-react";
-import LiveTV from "./LiveTV.jsx";
+const LiveTV = React.lazy(() => import("./LiveTV.jsx"));
 import "./styles.css";
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || "5842b1e115a82d3dd7d335874888c943";
@@ -277,7 +277,7 @@ function App(){
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Preparing your cinema experience…</span></div> :
       <>
-        {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : page==="live" ? <><LiveTV/><Footer/></> : <>
+        {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : page==="live" ? <><Suspense fallback={<div className="loading-screen live-route-loading" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Opening Live TV…</span></div>}><LiveTV/></Suspense><Footer/></> : <>
         {page==="home" && hero && <Hero item={hero} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved(hero.id)}/>}
         <main className={page==="home" ? "content home-content":"content"}>
           {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
