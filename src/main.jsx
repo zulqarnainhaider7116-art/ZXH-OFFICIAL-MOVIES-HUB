@@ -213,7 +213,7 @@ function App(){
           api(path,{...params,sort_by:"vote_average.desc","vote_count.gte":50})
         ]);
         const clean=data=>(data.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:type}));
-        setCategoryData({"Trending in "+label:clean(trending),"Popular "+label:clean(popular),"Top Rated "+label:clean(topRated)});
+        setCategoryData({["Trending in "+label]:clean(trending),["Popular "+label]:clean(popular),["Top Rated "+label]:clean(topRated)});
       }
     }catch(e){setCategoryError(e.message||"Unable to load this category.");}
     finally{setCategoryLoading(false);}
