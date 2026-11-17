@@ -1373,3 +1373,12 @@ body{background:var(--bg)!important}
 .app .header{background:#111419!important}
 .app .category-nav{background:#171b22!important}
 .app .mobile-nav{background:#151a20!important}
+
+
+/* Category pages now follow the in-flow header; remove legacy fixed-header spacer. */
+.app .content:not(.home-content){padding-top:26px!important}
+.app .content:not(.home-content) .category-page-head{padding-top:8px!important;margin-bottom:24px!important}
+@media(max-width:700px){
+  .app .content:not(.home-content){padding:18px 17px 110px!important}
+  .app .content:not(.home-content) .category-page-head{padding-top:4px!important;margin-bottom:20px!important}
+}
