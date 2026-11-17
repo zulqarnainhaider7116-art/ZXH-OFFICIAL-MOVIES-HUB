@@ -466,7 +466,8 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
       {id:"3",name:"SERVER 3",movie:id=>"https://vidrock.net/embed/movie/"+id,tv:(id,s,e)=>"https://vidrock.net/embed/tv/"+id+"/"+s+"/"+e},
       {id:"4",name:"SERVER 4",movie:id=>"https://vidnest.fun/movie/"+id,tv:(id,s,e)=>"https://vidnest.fun/tv/"+id+"/"+s+"/"+e},
       {id:"5",name:"SERVER 5",movie:id=>"https://cinesrc.st/embed/movie/"+id,tv:(id,s,e)=>"https://cinesrc.st/embed/tv/"+id+"?s="+s+"&e="+e},
-      {id:"6",name:"SERVER 6",movie:id=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id,tv:(id,s,e)=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id+"/"+s+"/"+e}
+      {id:"6",name:"SERVER 6",movie:id=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id,tv:(id,s,e)=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id+"/"+s+"/"+e},
+      {id:"7",name:"SERVER 7",dynamic:true,movie:()=>"",tv:()=>""}
     ];
     const makeUrl=(server)=>isSeries?server.tv(item.id,season,episode):server.movie(item.id);
     openPlayer({kind:"stream",source:"direct-servers",serverIndex:0,servers,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season,episode,seasons:(item.seasons||[]).filter(x=>Number.isInteger(x.season_number)&&x.season_number>=0).map(x=>({number:x.season_number,name:x.name})),title:titleOf(item),poster:img(item.poster_path,"w780"),description:item.overview||""});
@@ -587,6 +588,10 @@ function PlayerScreen({entry,onBack}){
   const [seasonEpisodes,setSeasonEpisodes]=useState([]);
   const [seasonEpisodesLoading,setSeasonEpisodesLoading]=useState(false);
   const [seasonEpisodesError,setSeasonEpisodesError]=useState("");
+  const [server7Data,setServer7Data]=useState(null);
+  const [server7Loading,setServer7Loading]=useState(false);
+  const [server7Error,setServer7Error]=useState("");
+  const [server7SelectedUrl,setServer7SelectedUrl]=useState("");
   useEffect(()=>{
     if(entry.source!=="direct-servers"||entry.mediaType!=="tv")return;
     let cancelled=false;
@@ -602,64 +607,39 @@ function PlayerScreen({entry,onBack}){
     return()=>{cancelled=true;};
   },[entry.source,entry.mediaType,entry.tmdbId,selectedSeason]);
   const activeServer=entry.source==="direct-servers"?entry.servers?.[activeServerIndex]:null;
+  useEffect(()=>{
+    if(activeServer?.id!=="7")return;
+    let cancelled=false;
+    setServer7Loading(true);setServer7Error("");setServer7Data(null);setServer7SelectedUrl("");
+    const params=new URLSearchParams({
+      q:entry.title||"Unknown title",
+      tmdb:String(entry.tmdbId),
+      type:entry.mediaType==="tv"?"tv":"movie",
+      season:String(selectedSeason),
+      episode:String(selectedEpisode)
+    });
+    fetch("/api/davidcyril/watch?"+params.toString())
+      .then(async response=>{
+        const payload=await response.json().catch(()=>null);
+        if(!response.ok||!payload?.success||!payload?.result)throw new Error(payload?.error?.message||"SERVER 7 could not find a playable source.");
+        return payload.result;
+      })
+      .then(result=>{
+        if(cancelled)return;
+        const streams=Object.entries(result.streams||{}).filter(([,url])=>typeof url==="string"&&/^https?:\\/\\//i.test(url)).map(([name,url])=>({name,url}));
+        if(!streams.length)throw new Error("SERVER 7 returned no playable sources for this title.");
+        setServer7Data({...result,streams});
+        setServer7SelectedUrl(streams[0].url);
+      })
+      .catch(error=>{if(!cancelled)setServer7Error(error.message||"SERVER 7 is temporarily unavailable.");})
+      .finally(()=>{if(!cancelled)setServer7Loading(false);});
+    return()=>{cancelled=true;};
+  },[activeServer?.id,entry.title,entry.tmdbId,entry.mediaType,selectedSeason,selectedEpisode]);
   const directEmbedUrl=activeServer
-    ?(entry.mediaType==="tv"?activeServer.tv(entry.tmdbId,selectedSeason,selectedEpisode):activeServer.movie(entry.tmdbId))
+    ?(activeServer.dynamic?server7SelectedUrl:(entry.mediaType==="tv"?activeServer.tv(entry.tmdbId,selectedSeason,selectedEpisode):activeServer.movie(entry.tmdbId)))
     :entry.embedUrl;
   const playerShellRef=useRef(null);
   const nativeVideoRef=useRef(null);
-  const [audioTracks,setAudioTracks]=useState([]);
-  const [selectedAudioTrack,setSelectedAudioTrack]=useState("");
-  const [audioTrackStatus,setAudioTrackStatus]=useState("");
-  useEffect(()=>{
-    if(entry.source!=="archive"){
-      setAudioTracks([]);
-      setSelectedAudioTrack("");
-      setAudioTrackStatus("This provider uses an embedded player. ZXH cannot inspect or switch its internal audio tracks.");
-      return;
-    }
-    const video=nativeVideoRef.current;
-    if(!video)return;
-    const refreshTracks=()=>{
-      const list=video.audioTracks;
-      if(!list){
-        setAudioTracks([]);
-        setSelectedAudioTrack("");
-        setAudioTrackStatus("This browser does not expose selectable audio tracks for this video.");
-        return;
-      }
-      const tracks=Array.from(list).map((track,index)=>({
-        id:String(index),
-        label:track.label||track.language||("Audio "+(index+1)),
-        language:track.language||"",
-        enabled:!!track.enabled
-      }));
-      setAudioTracks(tracks);
-      const active=tracks.find(track=>track.enabled);
-      setSelectedAudioTrack(active?.id??(tracks[0]?.id??""));
-      setAudioTrackStatus(tracks.length>1?"Multiple audio tracks detected. Choose a language to switch.":tracks.length===1?"Only one audio track is available.":"No alternate audio tracks were detected in this source.");
-    };
-    refreshTracks();
-    const list=video.audioTracks;
-    list?.addEventListener?.("addtrack",refreshTracks);
-    list?.addEventListener?.("removetrack",refreshTracks);
-    list?.addEventListener?.("change",refreshTracks);
-    video.addEventListener("loadedmetadata",refreshTracks);
-    return()=>{
-      list?.removeEventListener?.("addtrack",refreshTracks);
-      list?.removeEventListener?.("removetrack",refreshTracks);
-      list?.removeEventListener?.("change",refreshTracks);
-      video.removeEventListener("loadedmetadata",refreshTracks);
-    };
-  },[entry.source,entry.streamUrl]);
-  const changeAudioTrack=value=>{
-    const video=nativeVideoRef.current;
-    const list=video?.audioTracks;
-    if(!list)return;
-    const index=Number(value);
-    for(let i=0;i<list.length;i++)list[i].enabled=i===index;
-    setSelectedAudioTrack(value);
-    setAudioTracks(Array.from(list).map((track,i)=>({id:String(i),label:track.label||track.language||("Audio "+(i+1)),language:track.language||"",enabled:!!track.enabled})));
-  };
   const [isFullscreen,setIsFullscreen]=useState(false);
   const [forceLandscape,setForceLandscape]=useState(false);
   useEffect(()=>{const sync=()=>{const active=!!document.fullscreenElement;setIsFullscreen(active);if(active){try{const orientation=window.screen?.orientation;if(orientation?.lock){Promise.resolve(orientation.lock("landscape")).then(()=>setForceLandscape(false)).catch(()=>setForceLandscape(window.matchMedia("(orientation: portrait)").matches));}else setForceLandscape(window.matchMedia("(orientation: portrait)").matches);}catch{setForceLandscape(window.matchMedia("(orientation: portrait)").matches);}}else{setForceLandscape(false);try{window.screen?.orientation?.unlock?.()}catch{}}};document.addEventListener("fullscreenchange",sync);return()=>document.removeEventListener("fullscreenchange",sync)},[]);
@@ -687,15 +667,10 @@ function PlayerScreen({entry,onBack}){
       <div><span className="eyebrow">{entry.kind==="episode"?"EPISODE PLAYER":"MOVIE PLAYER"}</span><h1>{entry.title||detail.title||"Now Playing"}</h1><p>{detail.description||detail.overview||"Enjoy your selection in the ZXH OFFICIAL player."}</p></div>
     </section>
     <section className={"player-shell"+(forceLandscape?" force-landscape":"")} ref={playerShellRef}>
-      {entry.source==="archive" ? <video ref={nativeVideoRef} className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : <iframe key={entry.source==="direct-servers"?directEmbedUrl:embedPath} src={entry.source==="direct-servers"?directEmbedUrl:embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager" referrerPolicy="strict-origin-when-cross-origin"/>}
+      {entry.source==="archive" ? <video ref={nativeVideoRef} className="archive-video" controls autoPlay playsInline poster={poster||undefined}><source src={entry.streamUrl} type={entry.format==="MPEG4"?"video/mp4":entry.format==="WebM"?"video/webm":undefined}/>Your browser cannot play this video format.</video> : entry.source==="youtube" ? <YouTubeAutoPlayer key={entry.youtubeId} entry={entry}/> : activeServer?.id==="7" ? (server7Loading?<div className="server7-status">Connecting to SERVER 7…</div>:server7Error?<div className="server7-status server7-error">{server7Error}</div>:server7SelectedUrl?<iframe key={server7SelectedUrl} src={server7SelectedUrl} title={entry.title||"ZXH OFFICIAL SERVER 7"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager" referrerPolicy="strict-origin-when-cross-origin"/>:<div className="server7-status">Choose an available source below.</div>) : <iframe key={entry.source==="direct-servers"?directEmbedUrl:embedPath} src={entry.source==="direct-servers"?directEmbedUrl:embedPath} title={entry.title||"ZXH OFFICIAL Player"} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen loading="eager" referrerPolicy="strict-origin-when-cross-origin"/>}
     </section>
-    <section className="audio-language-panel" aria-label="Audio language settings">
-      <div className="audio-language-heading"><Globe2 size={17}/><div><strong>Audio Language</strong><small>Switch between audio tracks available in this source</small></div></div>
-      {audioTracks.length>0
-        ? <label className="audio-language-select"><span>Available tracks</span><select value={selectedAudioTrack} onChange={e=>changeAudioTrack(e.target.value)} disabled={audioTracks.length<2}>{audioTracks.map(track=><option key={track.id} value={track.id}>{track.label}{track.language&&track.label!==track.language?" ("+track.language+")":""}</option>)}</select></label>
-        : <p className="audio-language-status">{audioTrackStatus||"Checking available audio tracks…"}</p>}
-      {audioTracks.length>0&&<p className="audio-language-status">{audioTrackStatus}</p>}
-    </section>
+    {entry.source==="direct-servers"&&activeServer?.id==="7"&&server7Data?.streams?.length>0&&<section className="server7-source-panel"><div className="server7-panel-heading"><strong>SERVER 7 · AVAILABLE SOURCES</strong><span>{server7Data.streams.length} source(s)</span></div><div className="server7-source-list">{server7Data.streams.map((source,index)=><button type="button" key={source.name} className={server7SelectedUrl===source.url?"active":""} onClick={()=>setServer7SelectedUrl(source.url)}>{source.name.replace(/_/g," ").toUpperCase()}<small>{server7SelectedUrl===source.url?"PLAYING":"PLAY"}</small></button>)}</div></section>}
+    {entry.source==="direct-servers"&&activeServer?.id==="7"&&server7Data?.download&&<section className="server7-download-panel"><strong>DOWNLOAD SOURCE</strong><span>{server7Data.download.title||entry.title}</span><div>{server7Data.download.download_url&&<a href={server7Data.download.download_url} target="_blank" rel="noreferrer">DOWNLOAD FILE <ChevronRight size={15}/></a>}{server7Data.download.download_page&&<a href={server7Data.download.download_page} target="_blank" rel="noreferrer">DOWNLOAD PAGE <ChevronRight size={15}/></a>}{server7Data.download.page&&<a href={server7Data.download.page} target="_blank" rel="noreferrer">SOURCE DETAILS <ChevronRight size={15}/></a>}</div></section>}
     {entry.source==="youtube"&&<p className="youtube-note">Now playing inside ZXH OFFICIAL.</p>}
     {entry.source!=="youtube"&&entry.source!=="archive"&&<div className="player-info-row">
       <div><strong>Available servers</strong><span>{streams.length?streams.length+" playback option(s)":"More options may be available inside the player."}</span></div>
