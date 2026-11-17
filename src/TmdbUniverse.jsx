@@ -66,8 +66,16 @@ export default function TmdbUniverse({api,img,titleOf,scoreOf,yearOf,openDetails
     const poster=isPerson?item.profile_path:isCollection?item.poster_path||item.backdrop_path:isProvider?item.logo_path:isCompany?item.logo_path:item.poster_path;
     const name=isPerson?item.name:isCollection?item.name:isProvider?item.provider_name:isCompany?item.name:titleOf(item);
     const subtitle=isPerson?(item.known_for_department||"Cast & Crew"):isCollection?(item.parts?.length?item.parts.length+" titles":"Movie franchise"):isProvider?(item.display_priority!=null?"Streaming · "+region:"Streaming provider"):isCompany?"TMDB studio / network":(yearOf(item)||"—")+" · "+(item.media_type==="tv"?"TV Series":"Movie");
-    const click=()=>{if(item.media_type==="movie"||item.media_type==="tv"||item.release_date||item.first_air_date)openDetails({...item,media_type:item.media_type||(item.first_air_date?"tv":"movie")});};
-    return <button className="universe-card" key={item.id+"-"+i} onClick={click} disabled={isProvider||isCompany||isCollection||isPerson}><div className="universe-poster">{poster?<img src={img(poster,"w342")} alt={name} loading="lazy"/>:<span>{(name||"?").slice(0,1)}</span>}{!isProvider&&!isCompany&&!isPerson&&<i><Play size={15} fill="currentColor"/></i>}</div><strong>{name||"Untitled"}</strong><small>{subtitle}</small>{!isPerson&&!isProvider&&!isCompany&&!isCollection&&<span className="universe-rating"><Star size={11} fill="currentColor"/> {scoreOf(item)}</span>}</button>;
+    const click=async()=>{
+     try{
+      if(isPerson){const d=await api("/person/"+item.id+"/combined_credits");setRows([{label:(item.name||"Person")+" · Known For",items:unique([...(d.cast||[]),...(d.crew||[])]).map(x=>({...x,media_type:x.media_type||(x.first_air_date?"tv":"movie")}))}]);return;}
+      if(isCollection){const d=await api("/collection/"+item.id);setRows([{label:d.name||"Franchise Collection",items:unique(d.parts||[]).map(x=>({...x,media_type:"movie"}))}]);return;}
+      if(isProvider){const d=await api("/discover/"+media,{watch_region:region,with_watch_providers:String(item.provider_id),sort_by:"popularity.desc"});setRows([{label:(item.provider_name||"Provider")+" · "+media.toUpperCase(),items:unique(d.results||[]).map(x=>({...x,media_type:media}))}]);return;}
+      if(isCompany){const d=await api("/discover/"+(tab==="networks"?"tv":"movie"),{[tab==="networks"?"with_networks":"with_companies"]:String(item.id),sort_by:"popularity.desc"});setRows([{label:(item.name||"Company")+" · Titles",items:unique(d.results||[]).map(x=>({...x,media_type:tab==="networks"?"tv":"movie"}))}]);return;}
+      if(item.media_type==="movie"||item.media_type==="tv"||item.release_date||item.first_air_date)openDetails({...item,media_type:item.media_type||(item.first_air_date?"tv":"movie")});
+     }catch(e){setError(e.message||"Unable to open this TMDB entry.");}
+    };
+    return <button className="universe-card" key={item.id+"-"+i} onClick={click} disabled={false}><div className="universe-poster">{poster?<img src={img(poster,"w342")} alt={name} loading="lazy"/>:<span>{(name||"?").slice(0,1)}</span>}{!isProvider&&!isCompany&&!isPerson&&<i><Play size={15} fill="currentColor"/></i>}</div><strong>{name||"Untitled"}</strong><small>{subtitle}</small>{!isPerson&&!isProvider&&!isCompany&&!isCollection&&<span className="universe-rating"><Star size={11} fill="currentColor"/> {scoreOf(item)}</span>}</button>;
    })}</div>:<p className="universe-empty">No results in this collection yet.</p>}
   </div>)}
   {!loading&&tab!=="genres"&&rows.length===0&&!error&&<div className="universe-state">No collection data available.</div>}
