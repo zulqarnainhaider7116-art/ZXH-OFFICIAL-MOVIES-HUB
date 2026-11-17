@@ -1353,3 +1353,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
   html{scroll-behavior:auto!important}
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
+
+
+/* ZXH OFFICIAL — hard stop for scroll repaint / flashing */
+html{scroll-behavior:auto!important}
+body{background:var(--bg)!important}
+.app{background-color:var(--bg)!important;background-image:none!important}
+/* Fixed blurred noise and ambient layers repaint on every scroll frame on some mobile GPUs. */
+.app>.ambient,.app>.grain{display:none!important;animation:none!important;filter:none!important}
+/* Keep the hero image fixed until the user chooses another title. */
+.app>.hero,.app>.hero *{animation:none!important;transition:none!important}
+.app .cards{transition:none!important;will-change:auto!important}
+.app .cards-viewport{scroll-behavior:auto!important}
+.app .poster{background:#171b22!important;contain:paint!important}
+.app .poster img{background:#171b22!important;display:block}
+.app .header,.app .category-nav,.app .mobile-nav{
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+.app .header{background:#111419!important}
+.app .category-nav{background:#171b22!important}
+.app .mobile-nav{background:#151a20!important}
