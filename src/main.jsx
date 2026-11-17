@@ -153,15 +153,7 @@ function App(){
     load();
   },[]);
 
-  useEffect(()=>{
-    if(page!=="home"||heroItems.length<2)return;
-    let index=Math.max(0,heroItems.findIndex(item=>item.id===hero?.id));
-    const timer=window.setInterval(()=>{
-      index=(index+1)%heroItems.length;
-      setHero(heroItems[index]);
-    },5000);
-    return ()=>window.clearInterval(timer);
-  },[heroItems,page]);
+  // Keep the featured Hero stable while scrolling; automatic backdrop swapping caused visual flashing.
   useEffect(()=>{
     if(!selected) return;
     document.body.style.overflow="hidden";
@@ -170,7 +162,7 @@ function App(){
     return ()=>{document.body.style.overflow="";window.removeEventListener("keydown",onKey)};
   },[selected]);
 
-  const go = key => { setPage(key); setMobileOpen(false); setSearch(""); setQuery(""); setPlayer(null); if(key!=="category"&&key!=="live")setActiveCategory(""); window.scrollTo({top:0,behavior:"smooth"}); };
+  const go = key => { setPage(key); setMobileOpen(false); setSearch(""); setQuery(""); setPlayer(null); if(key!=="category"&&key!=="live")setActiveCategory(""); window.scrollTo({top:0,behavior:"auto"}); };
   const [activeCategory,setActiveCategory]=useState("");
   const [categoryData,setCategoryData]=useState({});
   const [categoryLoading,setCategoryLoading]=useState(false);
@@ -227,7 +219,7 @@ function App(){
   const [countryError,setCountryError]=useState("");
   const countryOptions=[["PK","Pakistan"],["US","United States"],["GB","United Kingdom"],["IN","India"],["TR","Turkey"],["KR","South Korea"],["JP","Japan"],["CN","China"],["BD","Bangladesh"],["AE","UAE"],["SA","Saudi Arabia"],["CA","Canada"],["AU","Australia"],["FR","France"],["DE","Germany"],["ES","Spain"],["IT","Italy"],["BR","Brazil"],["MX","Mexico"],["ID","Indonesia"],["TH","Thailand"],["PH","Philippines"],["NG","Nigeria"],["ZA","South Africa"]];
   const loadCountry=async(code=countryCode)=>{
-    setCountryCode(code);setPage("country");setMobileOpen(false);setCountryLoading(true);setCountryError("");setCountryRows({});setPlayer(null);window.scrollTo({top:0,behavior:"smooth"});
+    setCountryCode(code);setPage("country");setMobileOpen(false);setCountryLoading(true);setCountryError("");setCountryRows({});setPlayer(null);window.scrollTo({top:0,behavior:"auto"});
     try{
       const [movies,action,horror,anime,series,actionTV]=await Promise.all([
         api("/discover/movie",{region:code,sort_by:"popularity.desc"}),
@@ -248,12 +240,12 @@ function App(){
     if(key==="mature"||key==="midnight"){
       setActiveCategory(key);setPage("category");setPlayer(null);
       setCatalogType("movie");
-      window.scrollTo({top:0,behavior:"smooth"});
+      window.scrollTo({top:0,behavior:"auto"});
       await loadAdultCatalog(key,"movie");
       return;
     }
     setActiveCategory(key);setPage("category");setPlayer(null);setCategoryLoading(true);setCategoryError("");setCategoryData({});
-    window.scrollTo({top:0,behavior:"smooth"});
+    window.scrollTo({top:0,behavior:"auto"});
     try{
       let path="/discover/movie",params={},type="movie",fixedRows=null;
       if(key==="trending"){fixedRows=[["Trending This Week",()=>api("/trending/all/week")],["Trending Movies",()=>api("/trending/movie/week")],["Trending Series",()=>api("/trending/tv/week")],["Popular Movies",()=>api("/movie/popular")],["Popular Series",()=>api("/tv/popular")]];}
@@ -285,8 +277,8 @@ function App(){
     finally{setCategoryLoading(false);}
   };
 
-  const openPlayer = entry => { setPlayerBackPage(page === "player" ? playerBackPage : page); setPlayer(entry); setSelected(null); setPage("player"); window.scrollTo({top:0,behavior:"smooth"}); };
-  const closePlayer = () => { setPlayer(null); setPage(playerBackPage || "home"); window.scrollTo({top:0,behavior:"smooth"}); };
+  const openPlayer = entry => { setPlayerBackPage(page === "player" ? playerBackPage : page); setPlayer(entry); setSelected(null); setPage("player"); window.scrollTo({top:0,behavior:"auto"}); };
+  const closePlayer = () => { setPlayer(null); setPage(playerBackPage || "home"); window.scrollTo({top:0,behavior:"auto"}); };
 
   const openDetails=async(item)=>{
     try{
@@ -302,7 +294,7 @@ function App(){
     const q=search.trim(); if(!q) return;
     setLoading(true); setPage("search"); setQuery(q);
     setYoutubeSearchLoading(true); setYoutubeSearchError(""); setYoutubeSearchResults([]);
-    window.scrollTo({top:0,behavior:"smooth"});
+    window.scrollTo({top:0,behavior:"auto"});
     const [tmdbResult,youtubeResult]=await Promise.allSettled([
       api("/search/multi",{query:q,include_adult:"false"}),
       fetch("/api/youtube/search?q="+encodeURIComponent(q)).then(async response=>{
