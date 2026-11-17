@@ -1200,67 +1200,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
 @media(max-width:380px){.hero{padding-left:15px;padding-right:15px}.hero h1{font-size:clamp(34px,10vw,42px)}}
 
 
-/* ZXH OFFICIAL — navbar flow and hero separation fix */
-@media(min-width:701px){
-  .app>.header{
-    position:sticky!important;
-    top:12px!important;
-    left:auto!important;
-    transform:none!important;
-    margin:18px auto 58px!important;
-    z-index:100!important;
-  }
-  .app>.header .category-nav{
-    z-index:3;
-  }
-  .app>.hero{
-    margin-top:0!important;
-    clear:both;
-  }
-}
-@media(max-width:700px){
-  .app>.header{
-    position:sticky!important;
-    top:8px!important;
-    left:auto!important;
-    transform:none!important;
-    margin:12px auto 18px!important;
-    z-index:100!important;
-  }
-  .app>.header .category-nav{
-    display:flex!important;
-    align-items:center!important;
-    gap:7px!important;
-    overflow-x:auto!important;
-    overflow-y:hidden!important;
-    padding:6px 7px!important;
-    scroll-snap-type:x proximity;
-    background:rgba(18,20,28,.94)!important;
-    border:1px solid rgba(255,255,255,.16)!important;
-    border-radius:13px!important;
-    z-index:3!important;
-  }
-  .app>.header .category-nav button{
-    flex:0 0 auto!important;
-    min-height:31px!important;
-    padding:7px 12px!important;
-    border:1px solid rgba(255,255,255,.12)!important;
-    border-radius:999px!important;
-    background:rgba(255,255,255,.055)!important;
-    scroll-snap-align:start;
-  }
-  .app>.header .category-nav button.active{
-    background:rgba(255,255,255,.17)!important;
-    border-color:rgba(255,255,255,.28)!important;
-    color:#fff!important;
-  }
-  .app>.hero{
-    margin-top:0!important;
-    clear:both;
-  }
-}
-
-
 /* ZXH OFFICIAL — stable mobile layout and zero-flash rendering */
 /* Put navigation back into normal document flow: no sticky/fixed compositing layer. */
 .app>.header{
@@ -1271,11 +1210,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
   z-index:20!important;
   -webkit-backdrop-filter:none!important;
   backdrop-filter:none!important;
-  background:rgba(17,20,25,.97)!important;
-  box-shadow:0 8px 28px rgba(0,0,0,.18)!important;
+  background:var(--panel)!important;
+  border-color:var(--line)!important;
+  box-shadow:0 8px 28px rgba(0,0,0,.12)!important;
 }
 .app>.header .category-nav{
-  background:rgba(17,20,25,.98)!important;
+  background:var(--panel)!important;
+  border-color:var(--line)!important;
   -webkit-backdrop-filter:none!important;
   backdrop-filter:none!important;
 }
@@ -1298,7 +1239,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
     overflow-x:auto!important;overflow-y:hidden!important;
     padding:5px 6px!important;gap:5px!important;
     border-radius:12px!important;
-    background:#171b22!important;
+    background:var(--panel)!important;
     -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
     scrollbar-width:none!important;
   }
@@ -1320,7 +1261,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
   .app>.home-content{padding-top:20px!important}
   .app .mobile-nav{
     -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
-    background:#151a20!important;
+    background:var(--panel)!important;
   }
 }
 /* Dark, stable poster fallback instead of the previous bright white placeholder. */
@@ -1365,14 +1306,15 @@ body{background:var(--bg)!important}
 .app>.hero,.app>.hero *{animation:none!important;transition:none!important}
 .app .cards{transition:none!important;will-change:auto!important}
 .app .cards-viewport{scroll-behavior:auto!important}
-.app .poster{background:#171b22!important;contain:paint!important}
+.app .poster{background:var(--panel2)!important;}
 .app .poster img{background:#171b22!important;display:block}
 .app .header,.app .category-nav,.app .mobile-nav{
   -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
 }
-.app .header{background:#111419!important}
-.app .category-nav{background:#171b22!important}
-.app .mobile-nav{background:#151a20!important}
+.app .header,.app .category-nav,.app .mobile-nav{
+  background:var(--panel)!important;
+  border-color:var(--line)!important;
+}
 
 
 /* Category pages now follow the in-flow header; remove legacy fixed-header spacer. */
@@ -1410,14 +1352,8 @@ html[data-theme="dark"],html[data-theme="dark"] body{background:#0e1513!importan
 .app[data-theme="light"] .details-modal .cast-item{background:#f5faf6!important;color:#17372d!important}
 .app[data-theme="dark"] .details-modal .fak-result,
 .app[data-theme="dark"] .details-modal .cast-item{background:#202d26!important;color:#f0f5f1!important}
-/* Remove animated/transitional repaint sources across the whole app, not just the hero. */
-.app,.app *,.app *::before,.app *::after{
-  animation:none!important;
-  transition:none!important;
-  scroll-behavior:auto!important;
-  caret-color:auto;
-}
-.app,.app .header,.app .category-nav,.app .mobile-nav,.app .glass{
+/* Keep scroll compositing stable without disabling the site's UI motion globally. */
+.app .header,.app .category-nav,.app .mobile-nav{
   -webkit-backdrop-filter:none!important;
   backdrop-filter:none!important;
 }
