@@ -350,7 +350,7 @@ function YouTubeSearchRow({items,loading,error,openPlayer}){
   </section>;
 }
 
-const categoryItems=[["Trending","trending"],["Movies","movies"],["Series","series"],["18+ Mature","mature"],["Midnight","midnight"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
+const categoryItems=[["Trending","trending"],["Movies","movies"],["Series","series"],["Adult 18+","mature"],["Midnight","midnight"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
 const categoryLabels=Object.fromEntries(categoryItems.map(([label,key])=>[key,label]));
 function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,chooseCategory,theme,toggleTheme,countryCode,countryOptions,loadCountry}){
   return <header className="header glass">
@@ -410,7 +410,7 @@ function MovieCard({item,openDetails}){
       <span className={`quality${isSeries?" series-quality":""}`}>{posterLabel}</span>
       <span className="card-play"><Play size={18} fill="currentColor"/></span>
     </div>
-    <div className="card-info"><strong>{titleOf(item)}</strong><span>{yearOf(item)||"—"} <i/> {isSeries?"TV Series":"Movie"}{seasonCount?` · ${seasonCount} ${seasonCount===1?"Season":"Seasons"}`:""}</span></div>
+    <div className="card-info"><strong>{titleOf(item)}</strong><span>{yearOf(item)||"—"} <i/> {isSeries?"TV Show / Web Series":"Movie"}{seasonCount?` · ${seasonCount} ${seasonCount===1?"Season":"Seasons"}`:""}</span></div>
   </button>
 }
 
