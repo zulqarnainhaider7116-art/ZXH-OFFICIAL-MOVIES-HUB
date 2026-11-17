@@ -1022,7 +1022,7 @@ footer{
   background:var(--accent);opacity:.75;
 }
 .poster{
-  isolation:isolate;contain:layout paint;
+  isolation:auto;contain:none;
   background:linear-gradient(145deg,#dfe9e2,#f5edf4 55%,#e8eafa);
   border:1px solid rgba(255,255,255,.72);
   box-shadow:0 8px 22px rgba(31,53,40,.11);
@@ -1279,17 +1279,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
 }
 .app .poster img{background:#171b22!important}
 .app .poster img[hidden]{display:none!important}
-.app .movie-card,.app .movie-card:hover,.app .movie-card:active,
-.app .movie-card:hover .poster,.app .movie-card:active .poster{
-  transform:none!important;
-  transition:none!important;
-  box-shadow:0 7px 18px rgba(0,0,0,.22)!important;
-}
-.app .cards{will-change:auto!important;transition:none!important}
+.app .cards{will-change:auto!important}
 .app .cards-viewport{scroll-behavior:auto!important}
 .app .hero,.app .hero *{scroll-behavior:auto}
-.app .hero-poster,.app .hero-poster img{transition:none!important;animation:none!important}
-.app .header,.app .category-nav,.app .mobile-nav{transition:none!important}
+.app .hero-poster,.app .hero-poster img{animation:none!important}
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto!important}
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
@@ -1303,8 +1296,8 @@ body{background:var(--bg)!important}
 /* Fixed blurred noise and ambient layers repaint on every scroll frame on some mobile GPUs. */
 .app>.ambient,.app>.grain{display:none!important;animation:none!important;filter:none!important}
 /* Keep the hero image fixed until the user chooses another title. */
-.app>.hero,.app>.hero *{animation:none!important;transition:none!important}
-.app .cards{transition:none!important;will-change:auto!important}
+.app>.hero,.app>.hero *{scroll-behavior:auto!important}
+.app .cards{will-change:auto!important}
 .app .cards-viewport{scroll-behavior:auto!important}
 .app .poster{background:var(--panel2)!important;}
 .app .poster img{background:#171b22!important;display:block}
@@ -1368,4 +1361,46 @@ html[data-theme="dark"],html[data-theme="dark"] body{background:#0e1513!importan
 .app[data-theme="dark"] .details-cover{background-color:#17211d}
 .app[data-theme="dark"] .cover-shade{
   background:linear-gradient(90deg,#17211d 0%,#17211de8 38%,#17211d36 100%),linear-gradient(0deg,#17211d 0%,transparent 48%);
+}
+
+
+/* ZXH OFFICIAL — smooth, low-cost interactions */
+.app .poster{
+  contain:none!important;
+  isolation:auto!important;
+  transition:transform .22s ease,box-shadow .22s ease!important;
+}
+.app .movie-card{
+  transition:transform .18s ease!important;
+}
+.app .cards{
+  will-change:auto!important;
+  transition:transform .34s cubic-bezier(.2,.75,.25,1)!important;
+}
+.app .primary-btn,.app .glass-btn,.app .row-controls button,
+.app .mobile-nav button,.app .category-nav button{
+  transition:background-color .18s ease,border-color .18s ease,
+    color .18s ease,box-shadow .18s ease!important;
+}
+@media(hover:hover) and (pointer:fine){
+  .app .movie-card:hover .poster{
+    transform:translateY(-3px);
+    box-shadow:0 12px 25px rgba(0,0,0,.16);
+  }
+}
+@media(max-width:700px){
+  .app .cards-viewport{
+    -webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;
+    overscroll-behavior-x:contain;
+  }
+  .app .movie-card{scroll-snap-align:start}
+  .app .movie-card:active{opacity:.92}
+  .app .movie-card:hover .poster,
+  .app .movie-card:active .poster{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .app .poster,.app .movie-card,.app .cards,
+  .app .primary-btn,.app .glass-btn,.app .row-controls button,
+  .app .mobile-nav button,.app .category-nav button{transition:none!important}
 }
