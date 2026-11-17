@@ -1259,3 +1259,97 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
     clear:both;
   }
 }
+
+
+/* ZXH OFFICIAL — stable mobile layout and zero-flash rendering */
+/* Put navigation back into normal document flow: no sticky/fixed compositing layer. */
+.app>.header{
+  position:relative!important;
+  top:auto!important;left:auto!important;
+  transform:none!important;
+  margin:18px auto 62px!important;
+  z-index:20!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  background:rgba(17,20,25,.97)!important;
+  box-shadow:0 8px 28px rgba(0,0,0,.18)!important;
+}
+.app>.header .category-nav{
+  background:rgba(17,20,25,.98)!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.app>.hero{margin-top:0!important}
+@media(max-width:700px){
+  .app>.header{
+    width:calc(100% - 24px)!important;
+    height:116px!important;
+    min-height:116px!important;
+    margin:12px auto 16px!important;
+    padding:8px 9px!important;
+    border-radius:17px!important;
+    overflow:visible!important;
+  }
+  .app>.header .header-main{height:44px!important;min-height:44px!important}
+  .app>.header .category-nav{
+    top:59px!important;left:7px!important;right:7px!important;
+    min-height:43px!important;max-width:none!important;
+    display:flex!important;flex-wrap:nowrap!important;
+    overflow-x:auto!important;overflow-y:hidden!important;
+    padding:5px 6px!important;gap:5px!important;
+    border-radius:12px!important;
+    background:#171b22!important;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+    scrollbar-width:none!important;
+  }
+  .app>.header .category-nav::-webkit-scrollbar{display:none!important}
+  .app>.header .category-nav button{
+    flex:0 0 auto!important;min-height:31px!important;
+    padding:7px 11px!important;border-radius:999px!important;
+    white-space:nowrap!important;
+  }
+  .app>.hero{
+    margin:0!important;
+    min-height: min(700px, calc(100svh - 145px))!important;
+    padding:55px 17px 86px!important;
+    align-items:flex-end!important;
+  }
+  .app>.hero .hero-content{width:100%!important;max-width:100%!important}
+  .app>.hero .hero-poster{right:5%!important;bottom:100px!important;width:clamp(112px,32vw,150px)!important;opacity:.9}
+  .app>.hero .hero h1{font-size:clamp(34px,10vw,46px)!important}
+  .app>.home-content{padding-top:20px!important}
+  .app .mobile-nav{
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+    background:#151a20!important;
+  }
+}
+/* Dark, stable poster fallback instead of the previous bright white placeholder. */
+.app .poster{
+  background:#171b22!important;
+  border-color:rgba(255,255,255,.09)!important;
+  box-shadow:0 7px 18px rgba(0,0,0,.22)!important;
+  transition:none!important;
+}
+.app .poster:before{
+  color:#9aa4b2!important;
+  font-size:8px!important;
+  letter-spacing:1.5px!important;
+  background:linear-gradient(145deg,#171b22,#202630)!important;
+}
+.app .poster img{background:#171b22!important}
+.app .poster img[hidden]{display:none!important}
+.app .movie-card,.app .movie-card:hover,.app .movie-card:active,
+.app .movie-card:hover .poster,.app .movie-card:active .poster{
+  transform:none!important;
+  transition:none!important;
+  box-shadow:0 7px 18px rgba(0,0,0,.22)!important;
+}
+.app .cards{will-change:auto!important;transition:none!important}
+.app .cards-viewport{scroll-behavior:auto!important}
+.app .hero,.app .hero *{scroll-behavior:auto}
+.app .hero-poster,.app .hero-poster img{transition:none!important;animation:none!important}
+.app .header,.app .category-nav,.app .mobile-nav{transition:none!important}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto!important}
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
