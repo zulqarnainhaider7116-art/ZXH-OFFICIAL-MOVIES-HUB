@@ -1,10 +1,13 @@
-import React,{useEffect,useState} from "react";
+import React,{useEffect,useRef,useState} from "react";
 
-/* TMDB data is merged into matching homepage collections; only missing categories get new rows. */
+/* Extra discovery rows load only as the visitor approaches them. */
 export default function TmdbUniverse({api,setRows,MovieRow,openDetails}){
  const [groups,setGroups]=useState([]);
+ const [loading,setLoading]=useState(false);
+ const sentinelRef=useRef(null);
  useEffect(()=>{
   let alive=true;
+  let started=false;
   const defs=[
    ["Trending Movies",()=>api("/trending/movie/week"),"Trending This Week"],
    ["Trending TV Shows",()=>api("/trending/tv/week"),"Trending This Week"],
@@ -24,16 +27,29 @@ export default function TmdbUniverse({api,setRows,MovieRow,openDetails}){
    ["Popular Pakistani Movies",()=>api("/discover/movie",{with_origin_country:"PK",sort_by:"popularity.desc"})]
   ];
   const run=async()=>{
-   const results=await Promise.allSettled(defs.map(async([label,load,target])=>{
-    const data=await load();
-    return {label,target,items:(data.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:x.media_type||(x.first_air_date?"tv":"movie")}))};
-   }));
+   if(started)return;
+   started=true;
+   setLoading(true);
+   const results=new Array(defs.length);
+   let cursor=0;
+   const worker=async()=>{
+    while(alive){
+     const index=cursor++;
+     if(index>=defs.length)return;
+     const [label,load,target]=defs[index];
+     try{
+      const data=await load();
+      results[index]={status:"fulfilled",value:{label,target,items:(data.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:x.media_type||(x.first_air_date?"tv":"movie")}))}};
+     }catch(error){results[index]={status:"rejected",reason:error};}
+    }
+   };
+   await Promise.all(Array.from({length:Math.min(4,defs.length)},worker));
    if(!alive)return;
-   const fulfilled=results.filter(x=>x.status==="fulfilled").map(x=>x.value).filter(x=>x.items.length);
+   const fulfilled=results.filter(x=>x?.status==="fulfilled").map(x=>x.value).filter(x=>x.items.length);
    const merged={};
    const additions=[];
    for(const group of fulfilled){
-    if(group.target){(merged[group.target]??=[]).push(...group.items);}
+    if(group.target)(merged[group.target]??=[]).push(...group.items);
     else additions.push(group);
    }
    if(Object.keys(merged).length){
@@ -52,9 +68,19 @@ export default function TmdbUniverse({api,setRows,MovieRow,openDetails}){
     });
    }
    setGroups(additions);
+   setLoading(false);
   };
-  run();
-  return ()=>{alive=false;};
+  const node=sentinelRef.current;
+  if(!node){run();return()=>{alive=false;};}
+  if(!("IntersectionObserver" in window)){run();return()=>{alive=false;};}
+  const observer=new IntersectionObserver(entries=>{
+   if(entries.some(entry=>entry.isIntersecting)){observer.disconnect();run();}
+  },{rootMargin:"900px 0px"});
+  observer.observe(node);
+  return()=>{alive=false;observer.disconnect();};
  },[api,setRows]);
- return <>{groups.map(group=><MovieRow key={group.label} title={group.label} items={group.items} openDetails={openDetails}/>)}</>;
+ return <section ref={sentinelRef} className="universe-loader" aria-live="polite">
+  {loading&&<p className="country-loading">Loading more collections…</p>}
+  {groups.map(group=><MovieRow key={group.label} title={group.label} items={group.items} openDetails={openDetails}/>)}
+ </section>;
 }
