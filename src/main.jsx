@@ -626,7 +626,7 @@ function PlayerScreen({entry,onBack}){
       })
       .then(result=>{
         if(cancelled)return;
-        const streams=Object.entries(result.streams||{}).filter(([,url])=>typeof url==="string"&&/^https?:\\/\\//i.test(url)).map(([name,url])=>({name,url}));
+        const streams=Object.entries(result.streams||{}).filter(([,url])=>typeof url==="string"&&/^https?:\/\//i.test(url)).map(([name,url])=>({name,url}));
         if(!streams.length)throw new Error("SERVER 7 returned no playable sources for this title.");
         setServer7Data({...result,streams});
         setServer7SelectedUrl(streams[0].url);
