@@ -32,8 +32,8 @@ const navItems = [
 
 function App(){
   const [page,setPage] = useState("home");
-  const [theme,setTheme]=useState(()=>localStorage.getItem("zxh-theme")||"dark");
-  const toggleTheme=()=>setTheme(current=>{const next=current==="light"?"dark":"light";localStorage.setItem("zxh-theme",next);return next;});
+  const [theme,setTheme]=useState(()=>{const saved=localStorage.getItem("zxh-theme")||"dark";document.documentElement.dataset.theme=saved;return saved;});
+  const toggleTheme=()=>setTheme(current=>{const next=current==="light"?"dark":"light";localStorage.setItem("zxh-theme",next);document.documentElement.dataset.theme=next;return next;});
   useEffect(()=>{document.documentElement.dataset.theme=theme;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute("content",theme==="light"?"#f8f0f7":"#0e1513");},[theme]);
   const [mobileOpen,setMobileOpen] = useState(false);
   const [hero,setHero] = useState(null);
