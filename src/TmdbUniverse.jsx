@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from "react";
 
 /* Additional discovery rows are intentionally rendered in the existing homepage style. */
-export default function TmdbUniverse({api,MovieRow}){
+export default function TmdbUniverse({api,MovieRow,openDetails}){
  const [groups,setGroups]=useState([]);
  useEffect(()=>{
   let alive=true;
@@ -34,5 +34,5 @@ export default function TmdbUniverse({api,MovieRow}){
   run();
   return ()=>{alive=false;};
  },[api]);
- return <>{groups.map(group=><MovieRow key={group.label} title={group.label} items={group.items}/>)}</>;
+ return <>{groups.map(group=><MovieRow key={group.label} title={group.label} items={group.items} openDetails={openDetails}/>)}</>;
 }
