@@ -974,3 +974,149 @@ footer{
 .app[data-theme="dark"] .hero .meta,.app[data-theme="dark"] .scroll-cue{color:#d6e2d9}
 .app[data-theme="light"] .empty,.app[data-theme="light"] .empty p,.app[data-theme="light"] .page-head p,.app[data-theme="light"] .page-title p{color:#65776d}
 .app[data-theme="dark"] .empty,.app[data-theme="dark"] .empty p,.app[data-theme="dark"] .page-head p,.app[data-theme="dark"] .page-title p{color:#bdc9c0}
+
+
+/* ZXH OFFICIAL — clean, smooth and performance-focused UI polish */
+.loading-screen{
+  min-height:78svh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:11px;
+  padding:100px 20px 50px;
+  color:var(--muted);
+  text-align:center;
+}
+.loading-mark{display:grid;justify-items:center;gap:13px;margin-bottom:5px}
+.loading-mark .brand-mark{
+  width:52px;height:52px;border-radius:17px;
+  background:linear-gradient(145deg,#0b704d,#174b39);
+  color:#fff;font-size:23px;
+  box-shadow:0 10px 28px rgba(7,88,61,.2),inset 0 1px 0 #ffffff55;
+}
+.loading-progress{
+  display:block;width:76px;height:3px;overflow:hidden;
+  border-radius:99px;background:var(--line);
+}
+.loading-progress i{
+  display:block;width:38%;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  animation:loadingSweep 1.8s cubic-bezier(.45,0,.55,1) infinite;
+}
+@keyframes loadingSweep{
+  from{transform:translateX(-115%)}
+  to{transform:translateX(270%)}
+}
+.loading-screen>strong{color:var(--text);font-size:11px;font-weight:850;letter-spacing:2.2px}
+.loading-screen>span:last-child{color:var(--muted);font-size:12px;line-height:1.5}
+.country-loading{
+  display:flex;align-items:center;gap:10px;
+  width:max-content;max-width:100%;margin:0 0 24px;
+  padding:10px 14px;border:1px solid var(--line);
+  border-radius:999px;background:var(--panel);
+  color:var(--muted);font-size:12px;
+}
+.country-loading:before{
+  content:"";width:7px;height:7px;flex:0 0 7px;border-radius:50%;
+  background:var(--accent);opacity:.75;
+}
+.poster{
+  isolation:isolate;contain:layout paint;
+  background:linear-gradient(145deg,#dfe9e2,#f5edf4 55%,#e8eafa);
+  border:1px solid rgba(255,255,255,.72);
+  box-shadow:0 8px 22px rgba(31,53,40,.11);
+  transition:transform .28s ease,box-shadow .28s ease;
+}
+.poster:before{
+  content:"ZXH OFFICIAL";position:absolute;inset:0;z-index:0;
+  display:grid;place-items:center;
+  color:#557265;font-size:9px;font-weight:850;letter-spacing:2px;
+}
+.poster img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover}
+.poster img[hidden]{display:none}
+.poster-gloss{z-index:2;pointer-events:none;opacity:.18}
+.score,.quality,.card-play{z-index:3}
+.quality.series-quality{
+  max-width:calc(100% - 18px);
+  color:#fff;background:rgba(7,88,61,.92);
+  border:1px solid rgba(255,255,255,.2);
+  letter-spacing:.35px;
+}
+.movie-card{
+  border:0;outline:0;appearance:none;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .2s ease;
+}
+.movie-card:focus-visible .poster{
+  outline:3px solid var(--accent);outline-offset:3px;
+}
+.movie-card:active{transform:scale(.985)}
+.movie-card:hover .poster{
+  transform:translateY(-4px);
+  box-shadow:0 14px 28px rgba(31,53,40,.16);
+}
+.card-info{min-width:0}
+.card-info strong{line-height:1.35}
+.card-info span{line-height:1.45}
+button,a,input,select{-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
+  outline:2px solid var(--accent);outline-offset:3px;
+}
+.cards-viewport{
+  overscroll-behavior-x:contain;
+  scroll-behavior:smooth;
+}
+.cards{will-change:transform}
+.live-spinner{animation:liveSpin 1.6s linear infinite;opacity:.82}
+.live-card,.fak-result,.glass-btn,.primary-btn,.theme-toggle,.row-controls button{
+  transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease,transform .2s ease;
+}
+@media(hover:hover) and (pointer:fine){
+  .movie-card:hover .poster{transform:translateY(-5px)}
+  .live-card:hover{transform:translateY(-2px)}
+}
+@media(max-width:700px){
+  :root{--card-w:clamp(120px,36vw,150px);--gap:12px}
+  .grain,.ambient{display:none!important}
+  .header,.category-nav,.mobile-nav,.glass{
+    -webkit-backdrop-filter:blur(12px) saturate(115%);
+    backdrop-filter:blur(12px) saturate(115%);
+  }
+  .content{padding-left:clamp(13px,4vw,20px);padding-right:clamp(13px,4vw,20px)}
+  .row-section{margin-bottom:36px}
+  .row-head{align-items:center;margin-bottom:14px}
+  .row-head h2{font-size:clamp(18px,5vw,21px);letter-spacing:-.55px}
+  .poster{border-radius:14px;box-shadow:0 6px 16px rgba(31,53,40,.1)}
+  .movie-card:hover .poster,.movie-card:active .poster{transform:none;box-shadow:0 6px 16px rgba(31,53,40,.1)}
+  .card-play{display:none}
+  .card-info{padding:8px 2px 0}
+  .card-info strong{font-size:11px}
+  .card-info span{font-size:9px}
+  .hero{min-height:min(700px,100svh);padding-bottom:92px}
+  .hero h1{font-size:clamp(36px,11vw,48px);line-height:1.02;letter-spacing:-1.8px}
+  .hero-actions{gap:8px;margin-top:20px}
+  .primary-btn,.glass-btn{min-height:44px;height:auto;padding:11px 14px;border-radius:13px}
+  .details-modal{max-height:calc(100dvh - 20px);overscroll-behavior:contain}
+  .modal-backdrop{padding:10px;align-items:center}
+  .details-copy h1{overflow-wrap:anywhere}
+  .mobile-nav{bottom:calc(8px + env(safe-area-inset-bottom));}
+  .loading-screen{min-height:76svh;padding-top:95px}
+  .country-loading{font-size:11px;padding:9px 12px}
+}
+@media(max-width:380px){
+  :root{--card-w:clamp(112px,35vw,132px);--gap:10px}
+  .header{gap:5px}
+  .header .brand{gap:6px;font-size:9px}
+  .header .brand-mark{width:31px;height:31px}
+  .header .searchbox{min-width:0}
+  .header .searchbox input{min-width:0;font-size:10px}
+  .header .theme-toggle,.header .menu-btn{width:34px;height:34px;flex-basis:34px}
+  .hero-actions>*{flex:1}
+}
+@media(prefers-reduced-motion:reduce){
+  .loading-progress i{animation:none;width:100%;opacity:.45}
+  .live-spinner{animation:none}
+  .cards{will-change:auto;transition:none}
+  .movie-card,.poster,.live-card,.fak-result,.glass-btn,.primary-btn{transition:none}
+}
