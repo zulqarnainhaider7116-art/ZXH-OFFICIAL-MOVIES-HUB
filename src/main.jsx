@@ -32,7 +32,7 @@ const navItems = [
 
 function App(){
   const [page,setPage] = useState("home");
-  const [theme,setTheme]=useState(()=>localStorage.getItem("zxh-theme")==="dark"?"dark":"light");
+  const [theme,setTheme]=useState(()=>localStorage.getItem("zxh-theme")||"dark");
   const toggleTheme=()=>setTheme(current=>{const next=current==="light"?"dark":"light";localStorage.setItem("zxh-theme",next);return next;});
   useEffect(()=>{document.documentElement.dataset.theme=theme;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute("content",theme==="light"?"#f8f0f7":"#0e1513");},[theme]);
   const [mobileOpen,setMobileOpen] = useState(false);
@@ -335,7 +335,6 @@ function App(){
       <>
         {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : page==="live" ? <><Suspense fallback={<div className="loading-screen live-route-loading" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Opening Live TV…</span></div>}><LiveTV/></Suspense><Footer/></> : <>
         <main className={page==="home" ? "content home-content":"content"}>
-          {page==="home" && <TmdbUniverse api={api} img={img} titleOf={titleOf} scoreOf={scoreOf} yearOf={yearOf} openDetails={openDetails}/>}
           {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
@@ -351,7 +350,7 @@ function App(){
           {page==="country" && <div className="page-head category-page-head"><div><span className="eyebrow">COUNTRY COLLECTION</span><h1>{countryOptions.find(x=>x[0]===countryCode)?.[1]||countryCode}</h1><p>Movies, genres, anime and television from your selected country.</p></div></div>}
           {page==="country"&&countryLoading&&<p className="country-loading">Loading country collections…</p>}
           {page==="country"&&countryError&&<p className="fak-error">{countryError}</p>}
-          {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}\n          {page==="home" && <TmdbUniverse api={api} openDetails={openDetails} MovieRow={MovieRow}/>}
+          {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}\n          {page==="home" && <TmdbUniverse api={api} setRows={setRows} openDetails={openDetails} MovieRow={MovieRow}/>}
           {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
           {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && !(page==="country"&&countryLoading) && page!=="home" && <Empty page={page}/>}
         </main>
