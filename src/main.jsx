@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import {
   Search, Home, Film, Tv, Heart, Clock3, UserRound, Menu, X, Play, Globe2,
   Plus, Check, Star, ChevronRight, ChevronLeft, Info, SlidersHorizontal,
-  Sparkles, Bookmark, History, ArrowLeft, LoaderCircle, AlertCircle, Radio
+  Sparkles, Bookmark, History, ArrowLeft, LoaderCircle, AlertCircle, Radio, Sun, Moon
 } from "lucide-react";
 import LiveTV from "./LiveTV.jsx";
 import "./styles.css";
@@ -31,6 +31,9 @@ const navItems = [
 
 function App(){
   const [page,setPage] = useState("home");
+  const [theme,setTheme]=useState(()=>localStorage.getItem("zxh-theme")==="dark"?"dark":"light");
+  const toggleTheme=()=>setTheme(current=>{const next=current==="light"?"dark":"light";localStorage.setItem("zxh-theme",next);return next;});
+  useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
   const [mobileOpen,setMobileOpen] = useState(false);
   const [hero,setHero] = useState(null);
   const [rows,setRows] = useState({});
@@ -157,7 +160,7 @@ function App(){
 
   const go = key => { setPage(key); setMobileOpen(false); setSearch(""); setQuery(""); setPlayer(null); if(key!=="category"&&key!=="live")setActiveCategory(""); window.scrollTo({top:0,behavior:"smooth"}); };
   const [activeCategory,setActiveCategory]=useState("");
-  const [categoryData,setCategoryData]=useState([]);
+  const [categoryData,setCategoryData]=useState({});
   const [categoryLoading,setCategoryLoading]=useState(false);
   const [categoryError,setCategoryError]=useState("");
   const [countryCode,setCountryCode]=useState("PK");
@@ -184,21 +187,34 @@ function App(){
   const chooseCategory=async(key,label)=>{
     setMobileOpen(false);
     if(key==="live"){setActiveCategory(key);go("live");return;}
-    setActiveCategory(key);setPage("category");setPlayer(null);setCategoryLoading(true);setCategoryError("");setCategoryData([]);
+    setActiveCategory(key);setPage("category");setPlayer(null);setCategoryLoading(true);setCategoryError("");setCategoryData({});
     window.scrollTo({top:0,behavior:"smooth"});
     try{
-      let path="/trending/all/week",params={};
-      if(key==="movies")path="/movie/popular";
-      else if(key==="series")path="/tv/popular";
-      else if(key==="anime"){path="/discover/tv";params={with_genres:"16",with_original_language:"ja",sort_by:"popularity.desc"};}
-      else if(key==="bollywood"){path="/discover/movie";params={with_original_language:"hi",region:"IN",sort_by:"popularity.desc"};}
-      else if(key==="hollywood"){path="/discover/movie";params={with_original_language:"en",region:"US",sort_by:"popularity.desc"};}
-      else if(key==="pakistani"){path="/discover/movie";params={with_original_language:"ur",sort_by:"popularity.desc"};}
-      else if(key==="korean"){path="/discover/tv";params={with_original_language:"ko",sort_by:"popularity.desc"};}
-      else if(key==="turkish"){path="/discover/tv";params={with_original_language:"tr",sort_by:"popularity.desc"};}
-      else if(key==="action"||key==="comedy"||key==="horror"){path="/discover/movie";params={with_genres:key==="action"?"28":key==="comedy"?"35":"27",sort_by:"popularity.desc"};}
-      const data=await api(path,params);
-      setCategoryData((data.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:x.media_type||(path.includes("/tv")||path==="/tv/popular"?"tv":"movie")})));
+      let path="/discover/movie",params={},type="movie",fixedRows=null;
+      if(key==="movies"){fixedRows=[["Trending",()=>api("/trending/movie/week")],["Popular",()=>api("/movie/popular")],["Top Rated",()=>api("/movie/top_rated")],["Now Playing",()=>api("/movie/now_playing")]];}
+      else if(key==="series"){type="tv";fixedRows=[["Trending",()=>api("/trending/tv/week")],["Popular",()=>api("/tv/popular")],["Top Rated",()=>api("/tv/top_rated")],["Currently Airing",()=>api("/tv/on_the_air")]];}
+      else if(key==="anime"){path="/discover/tv";type="tv";params={with_genres:"16",with_original_language:"ja"};}
+      else if(key==="bollywood"){params={with_original_language:"hi",region:"IN"};}
+      else if(key==="hollywood"){params={with_original_language:"en",region:"US"};}
+      else if(key==="pakistani"){params={with_original_language:"ur"};}
+      else if(key==="korean"){path="/discover/tv";type="tv";params={with_original_language:"ko"};}
+      else if(key==="turkish"){path="/discover/tv";type="tv";params={with_original_language:"tr"};}
+      else if(key==="action"||key==="comedy"||key==="horror"){params={with_genres:key==="action"?"28":key==="comedy"?"35":"27"};}
+      if(fixedRows){
+        const results=await Promise.all(fixedRows.map(async([name,load])=>[name,load()]));
+        const resolved=await Promise.all(results.map(async([name,promise])=>[name,await promise]));
+          const sections={};
+        for(const [name,data] of resolved)sections[name]=(data.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:mediaTypeFor(x,type)}));
+        setCategoryData(sections);
+      }else{
+        const [trending,popular,topRated]=await Promise.all([
+          api(path,{...params,sort_by:"popularity.desc"}),
+          api(path,{...params,sort_by:"vote_count.desc"}),
+          api(path,{...params,sort_by:"vote_average.desc","vote_count.gte":50})
+        ]);
+        const clean=data=>(data.results||[]).filter(x=>x.poster_path).map(x=>({...x,media_type:type}));
+        setCategoryData({"Trending in "+label:clean(trending),"Popular "+label:clean(popular),"Top Rated "+label:clean(topRated)});
+      }
     }catch(e){setCategoryError(e.message||"Unable to load this category.");}
     finally{setCategoryLoading(false);}
   };
@@ -249,14 +265,14 @@ function App(){
     if(page==="movie") return {"Popular Movies":rows["Popular Movies"]||[],"Top Rated":rows["Top Rated"]||[]};
     if(page==="tv") return {"Popular Series":rows["Popular Series"]||[],"On Air":rows["On Air"]||[]};
     if(page==="search") return {"Search Results":rows["Search Results"]||[]};
-    if(page==="category") return {[categoryLabels[activeCategory]||"Trending"]:categoryData};
+    if(page==="category") return categoryData;
     if(page==="country") return countryRows;
     return rows;
   },[page,rows,watchlist,history,activeCategory,categoryData,countryRows]);
 
-  return <div className="app">
+  return <div className="app" data-theme={theme}>
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
-    <Header search={search} setSearch={setSearch} submit={doSearch} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>
+    <Header search={search} setSearch={setSearch} submit={doSearch} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} theme={theme} toggleTheme={toggleTheme} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen"><LoaderCircle className="spin" size={34}/><span>Loading cinema…</span></div> :
       <>
@@ -266,7 +282,9 @@ function App(){
           {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
-          {page==="category" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH COLLECTION</span><h1>{categoryLabels[activeCategory]||"Trending"}</h1><p>Explore titles in this collection.</p></div></div>}
+          {page==="category" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH COLLECTION</span><h1>{categoryLabels[activeCategory]||"Trending"}</h1><p>Explore separate trending, popular and top-rated picks in this collection.</p></div></div>}
+          {page==="category"&&categoryLoading&&<p className="country-loading">Building your {categoryLabels[activeCategory]||"category"} collection…</p>}
+          {page==="category"&&categoryError&&<p className="fak-error">{categoryError}</p>}
           {page==="country" && <div className="page-head category-page-head"><div><span className="eyebrow">COUNTRY COLLECTION</span><h1>{countryOptions.find(x=>x[0]===countryCode)?.[1]||countryCode}</h1><p>Movies, genres, anime and television from your selected country.</p></div></div>}
           {page==="country"&&countryLoading&&<p className="country-loading">Loading country collections…</p>}
           {page==="country"&&countryError&&<p className="fak-error">{countryError}</p>}
@@ -296,6 +314,8 @@ function App(){
 }
 
 
+function mediaTypeFor(x,fallback){return x.media_type||(x.first_air_date?"tv":fallback);}
+
 function YouTubeSearchRow({items,loading,error,openPlayer}){
   if(!loading&&!error&&!items.length) return null;
   return <section className="row-section youtube-search-section">
@@ -311,7 +331,7 @@ function YouTubeSearchRow({items,loading,error,openPlayer}){
 
 const categoryItems=[["Trending","trending"],["Movies","movies"],["Series","series"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
 const categoryLabels=Object.fromEntries(categoryItems.map(([label,key])=>[key,label]));
-function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,chooseCategory,countryCode,countryOptions,loadCountry}){
+function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,chooseCategory,theme,toggleTheme,countryCode,countryOptions,loadCountry}){
   return <header className="header glass">
     <div className="header-main">
       <button className="brand" onClick={()=>go("home")} aria-label="ZXH Official OTT home">
@@ -319,6 +339,7 @@ function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,cho
       </button>
       <nav className="desktop-nav">{navItems.map(([label,Icon,key])=><button className={page===key?"active":""} key={key} onClick={()=>go(key)}><Icon size={16}/>{label}</button>)}</nav>
       <form className="searchbox" onSubmit={submit}><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies & series…"/>{search&&<button type="button" onClick={()=>setSearch("")}><X size={14}/></button>}</form>
+      <button type="button" className="theme-toggle" onClick={toggleTheme} aria-label={"Switch to "+(theme==="light"?"dark":"light")+" mode"} title={theme==="light"?"Switch to dark mode":"Switch to light mode"}>{theme==="light"?<Moon size={18}/>:<Sun size={18}/>}</button>
       <button type="button" className="menu-btn" aria-label="Open navigation menu" aria-expanded={open} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
     </div>
     <nav className="category-nav" aria-label="Browse categories">{categoryItems.map(([label,key])=><button type="button" key={key} className={activeCategory===key?"active":""} onClick={()=>chooseCategory(key,label)}>{label}</button>)}</nav>
