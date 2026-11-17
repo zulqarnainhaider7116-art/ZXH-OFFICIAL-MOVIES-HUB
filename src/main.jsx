@@ -183,13 +183,19 @@ function App(){
       };
       const baseRows=[["Trending","popularity.desc"],["Popular","vote_count.desc"],["Top Rated","vote_average.desc"]];
       const requests=[
-        ...baseRows.map(([label,sort])=>Promise.all([1,2].map(page=>api(path,{
-          include_adult:"true",sort_by:sort,page,
-          ...(sort==="vote_average.desc"?{"vote_count.gte":"2"}:{})
-        })).then(pages=>({label,items:pages.flatMap(data=>data.results||[])}))),
-        ...genres.map(([label,id])=>Promise.all([1,2].map(page=>api(path,{
-          include_adult:"true",with_genres:String(id),sort_by:"popularity.desc",page
-        }))).then(pages=>({label:label+" "+prefix+" "+mediaLabel,items:pages.flatMap(data=>data.results||[])})))
+        ...baseRows.map(async ([label,sort])=>{
+          const pages=await Promise.all([1,2].map(page=>api(path,{
+            include_adult:"true",sort_by:sort,page,
+            ...(sort==="vote_average.desc"?{"vote_count.gte":"2"}:{})
+          })));
+          return {label,items:pages.flatMap(data=>data.results||[])};
+        }),
+        ...genres.map(async ([label,id])=>{
+          const pages=await Promise.all([1,2].map(page=>api(path,{
+            include_adult:"true",with_genres:String(id),sort_by:"popularity.desc",page
+          })));
+          return {label:label+" "+prefix+" "+mediaLabel,items:pages.flatMap(data=>data.results||[])};
+        })
       ];
       const results=await Promise.all(requests);
       const sections={};
