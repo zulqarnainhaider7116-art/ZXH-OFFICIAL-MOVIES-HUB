@@ -164,28 +164,15 @@ function App(){
   const [categoryLoading,setCategoryLoading]=useState(false);
   const [categoryError,setCategoryError]=useState("");
   const [catalogType,setCatalogType]=useState("movie");
-  const [catalogGenre,setCatalogGenre]=useState("all");
-  const [catalogGenres,setCatalogGenres]=useState({movie:[],tv:[]});
-  const loadAdultCatalog=async(key,type="movie",genre="all")=>{
+  const loadAdultCatalog=async(key,type="movie")=>{
     setCategoryLoading(true);setCategoryError("");setCategoryData({});
     try{
-      let genres=catalogGenres;
-      if(!genres.movie.length||!genres.tv.length){
-        const [movieGenres,tvGenres]=await Promise.all([
-          api("/genre/movie/list"),
-          api("/genre/tv/list")
-        ]);
-        genres={movie:movieGenres.genres||[],tv:tvGenres.genres||[]};
-        setCatalogGenres(genres);
-      }
       const path=type==="tv"?"/discover/tv":"/discover/movie";
-      const genreFilter=genre==="all"?{}:{with_genres:genre};
       const prefix=key==="mature"?"Adult":"Midnight Adult";
       const mediaLabel=type==="tv"?"TV Shows & Web Series":"Movies";
       const sorts=[["Trending","popularity.desc"],["Popular","vote_count.desc"],["Top Rated","vote_average.desc"]];
       const responses=await Promise.all(sorts.map(([label,sort])=>api(path,{
         include_adult:"true",
-        ...genreFilter,
         sort_by:sort,
         ...(sort==="vote_average.desc"?{"vote_count.gte":"10"}:{})
       })));
@@ -226,9 +213,9 @@ function App(){
     if(key==="live"){setActiveCategory(key);go("live");return;}
     if(key==="mature"||key==="midnight"){
       setActiveCategory(key);setPage("category");setPlayer(null);
-      setCatalogType("movie");setCatalogGenre("all");
+      setCatalogType("movie");
       window.scrollTo({top:0,behavior:"smooth"});
-      await loadAdultCatalog(key,"movie","all");
+      await loadAdultCatalog(key,"movie");
       return;
     }
     setActiveCategory(key);setPage("category");setPlayer(null);setCategoryLoading(true);setCategoryError("");setCategoryData({});
@@ -327,16 +314,12 @@ function App(){
           {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
-          {page==="category" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH COLLECTION</span><h1>{categoryLabels[activeCategory]||"Trending"}</h1><p>{activeCategory==="mature"?"Only titles explicitly marked as adult in TMDB. Browse adult movies and TV series by genre.":activeCategory==="midnight"?"Adult-only midnight movies and TV series, with dedicated genre browsing.":activeCategory==="series"?"Discover trending TV shows, web series, popular seasons and top-rated series.":"Explore separate trending, popular and top-rated picks in this collection."}</p></div></div>}
+          {page==="category" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH COLLECTION</span><h1>{categoryLabels[activeCategory]||"Trending"}</h1><p>{activeCategory==="mature"?"Only titles explicitly marked as adult in TMDB. Browse adult movies and TV series.":activeCategory==="midnight"?"Adult-only midnight movies and TV series.":activeCategory==="series"?"Discover trending TV shows, web series, popular seasons and top-rated series.":"Explore separate trending, popular and top-rated picks in this collection."}</p></div></div>}
           {page==="category"&&(activeCategory==="mature"||activeCategory==="midnight")&&<div className="catalog-filters" aria-label="Adult catalog filters">
             <div className="catalog-type-switch" role="group" aria-label="Content type">
-              <button type="button" className={catalogType==="movie"?"active":""} onClick={()=>{setCatalogType("movie");setCatalogGenre("all");loadAdultCatalog(activeCategory,"movie","all");}}>Movies</button>
-              <button type="button" className={catalogType==="tv"?"active":""} onClick={()=>{setCatalogType("tv");setCatalogGenre("all");loadAdultCatalog(activeCategory,"tv","all");}}>TV Shows &amp; Series</button>
+              <button type="button" className={catalogType==="movie"?"active":""} onClick={()=>{setCatalogType("movie");loadAdultCatalog(activeCategory,"movie");}}>Movies</button>
+              <button type="button" className={catalogType==="tv"?"active":""} onClick={()=>{setCatalogType("tv");loadAdultCatalog(activeCategory,"tv");}}>TV Shows &amp; Series</button>
             </div>
-            <label className="catalog-genre-picker"><span>GENRE</span><select value={catalogGenre} onChange={event=>{setCatalogGenre(event.target.value);loadAdultCatalog(activeCategory,catalogType,event.target.value);}}>
-              <option value="all">All genres</option>
-              {(catalogGenres[catalogType]||[]).map(genre=><option key={genre.id} value={genre.id}>{genre.name}</option>)}
-            </select></label>
           </div>}
           {page==="category"&&categoryLoading&&<p className="country-loading">Building your {categoryLabels[activeCategory]||"category"} collection…</p>}
           {page==="category"&&categoryError&&<p className="fak-error">{categoryError}</p>}
