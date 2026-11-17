@@ -460,6 +460,11 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
     const isSeries=item.media_type==="tv";
     const season=Number(item.seasons?.find(s=>s.season_number>0)?.season_number||1);
     const episode=1;
+    let imdbId=item.imdb_id||"";
+    try{
+      const externalIds=await api(`/${isSeries?"tv":"movie"}/${item.id}/external_ids`);
+      imdbId=externalIds.imdb_id||imdbId;
+    }catch{}
     const servers=[
       {id:"1",name:"SERVER 1",movie:id=>"https://vidlink.pro/movie/"+id,tv:(id,s,e)=>"https://vidlink.pro/tv/"+id+"/"+s+"/"+e},
       {id:"2",name:"SERVER 2",movie:id=>"https://player.vidzee.wtf/embed/movie/"+id,tv:(id,s,e)=>"https://player.vidzee.wtf/embed/tv/"+id+"/"+s+"/"+e},
@@ -467,7 +472,11 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
       {id:"4",name:"SERVER 4",movie:id=>"https://vidnest.fun/movie/"+id,tv:(id,s,e)=>"https://vidnest.fun/tv/"+id+"/"+s+"/"+e},
       {id:"5",name:"SERVER 5",movie:id=>"https://cinesrc.st/embed/movie/"+id,tv:(id,s,e)=>"https://cinesrc.st/embed/tv/"+id+"?s="+s+"&e="+e},
       {id:"6",name:"SERVER 6",movie:id=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id,tv:(id,s,e)=>"https://anyplay.stream/embed/movie/68ca4cf7203ee8afe6ee44cf/"+id+"/"+s+"/"+e},
-      {id:"7",name:"SERVER 7",dynamic:true,movie:()=>"",tv:()=>""}
+      {id:"7",name:"SERVER 7",dynamic:true,movie:()=>"",tv:()=>""},
+      {id:"8",name:"SERVER 8",movie:id=>"https://multiembed.mov/?video_id="+id+"&tmdb=1",tv:(id,s,e)=>"https://multiembed.mov/?video_id="+id+"&tmdb=1&s="+s+"&e="+e},
+      {id:"9",name:"SERVER 9",movie:id=>"https://vidsrcme.su/embed/movie/"+id,tv:(id,s,e)=>"https://vidsrcme.su/embed/tv/"+id+"/"+s+"/"+e},
+      {id:"10",name:"SERVER 10",movie:id=>imdbId?"https://autoembed.co/movie/imdb/"+imdbId:"",tv:(id,s,e)=>imdbId?"https://autoembed.co/tv/imdb/"+imdbId+"-"+s+"-"+e:""},
+      {id:"11",name:"SERVER 11",movie:id=>imdbId?"https://www.2embed.cc/embed/"+imdbId:"",tv:(id,s,e)=>imdbId?"https://www.2embed.cc/embedtv/"+imdbId+"&s="+s+"&e="+e:""}
     ];
     const makeUrl=(server)=>isSeries?server.tv(item.id,season,episode):server.movie(item.id);
     openPlayer({kind:"stream",source:"direct-servers",serverIndex:0,servers,tmdbId:item.id,mediaType:isSeries?"tv":"movie",season,episode,seasons:(item.seasons||[]).filter(x=>Number.isInteger(x.season_number)&&x.season_number>=0).map(x=>({number:x.season_number,name:x.name})),title:titleOf(item),poster:img(item.poster_path,"w780"),description:item.overview||""});
