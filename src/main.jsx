@@ -316,6 +316,7 @@ function App(){
   };
 
   const sectionData = useMemo(()=>{
+    if(page==="universe") return {};
     if(page==="list") return {"My List":watchlist};
     if(page==="history") return {"Continue Exploring":history};
     if(page==="movie") return {"Popular Movies":rows["Popular Movies"]||[],"Top Rated":rows["Top Rated"]||[]};
