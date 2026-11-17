@@ -602,3 +602,20 @@ footer{position:relative;z-index:2;border-top:1px solid #fff1;padding:45px 6vw 1
 .install-card .install-main b{margin-left:8px;font-size:17px}
 .install-card #installLater{display:block;width:100%;min-height:38px;margin-top:8px;border:0;background:transparent;color:#e5e9f5;font-size:11px;font-weight:850;letter-spacing:1.3px;cursor:pointer}
 .install-card .install-help{margin:12px auto 4px;padding:10px 12px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(255,255,255,.08);font-size:12px}
+
+
+/* ZXH SERVER 7 source selector and download panel */
+.server7-status{width:100%;height:100%;min-height:240px;display:grid;place-items:center;padding:24px;text-align:center;color:var(--muted);font-size:13px;background:#090b12}
+.server7-error{color:#ff9c9c}
+.server7-source-panel,.server7-download-panel{margin:16px 0;padding:15px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.04)}
+.server7-panel-heading{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px;font-size:11px;letter-spacing:.7px}
+.server7-panel-heading span,.server7-download-panel>span{color:var(--muted);font-size:10px}
+.server7-source-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.server7-source-list button{min-width:0;min-height:43px;padding:9px 10px;display:flex;align-items:center;justify-content:space-between;gap:7px;border:1px solid var(--line);border-radius:10px;background:#ffffff08;color:var(--text);font-size:10px;font-weight:850;cursor:pointer}
+.server7-source-list button.active{border-color:#8295ff;background:#8295ff22;color:#fff}
+.server7-source-list button small{font-size:8px;color:var(--muted)}
+.server7-download-panel{display:grid;gap:10px}
+.server7-download-panel>strong{font-size:11px;letter-spacing:.8px}
+.server7-download-panel>span{overflow-wrap:anywhere}
+.server7-download-panel>div{display:flex;flex-wrap:wrap;gap:8px}
+.server7-download-panel a{display:inline-flex;align-items:center;gap:5px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;color:var(--text);text-decoration:none;font-size:10px;font-weight:850}
