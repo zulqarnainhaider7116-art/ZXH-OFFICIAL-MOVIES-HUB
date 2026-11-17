@@ -62,7 +62,7 @@ export default function TmdbUniverse({api,img,titleOf,scoreOf,yearOf,openDetails
   {tab==="genres"&&genres.length===0&&!loading&&<div className="universe-state">Preparing genre directory…</div>}
   {rows.map((group,index)=><div className="universe-row" key={group.label+index}><div className="universe-row-head"><h3>{group.label}</h3><span>{group.items.length} results</span></div>
    {group.items.length>0?<div className="universe-grid">{group.items.map((item,i)=>{
-    const isPerson=tab==="people",isCollection=tab==="collections",isProvider=tab==="providers",isCompany=["companies","networks"].includes(tab);
+    const isPerson=tab==="people",isCollection=tab==="collections",isProvider=tab==="providers",isCompany=tab==="companies";
     const poster=isPerson?item.profile_path:isCollection?item.poster_path||item.backdrop_path:isProvider?item.logo_path:isCompany?item.logo_path:item.poster_path;
     const name=isPerson?item.name:isCollection?item.name:isProvider?item.provider_name:isCompany?item.name:titleOf(item);
     const subtitle=isPerson?(item.known_for_department||"Cast & Crew"):isCollection?(item.parts?.length?item.parts.length+" titles":"Movie franchise"):isProvider?(item.display_priority!=null?"Streaming · "+region:"Streaming provider"):isCompany?"TMDB studio / network":(yearOf(item)||"—")+" · "+(item.media_type==="tv"?"TV Series":"Movie");
