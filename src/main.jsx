@@ -38,6 +38,9 @@ function App(){
   const [mobileOpen,setMobileOpen] = useState(false);
   const [hero,setHero] = useState(null);
   const [heroItems,setHeroItems] = useState([]);
+  const [movieHero,setMovieHero] = useState(null);
+  const [seriesHero,setSeriesHero] = useState(null);
+  const [recentSearches,setRecentSearches] = useState(()=>JSON.parse(localStorage.getItem("zxh-recent-searches")||"[]"));
   const [rows,setRows] = useState({});
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState("");
@@ -127,18 +130,22 @@ function App(){
     const load=async()=>{
       try{
         setLoading(true); setError("");
-        const [trending,popularM,popularTV,topM,nowM,airTV] = await Promise.all([
+        const [trending,popularM,popularTV,topM,nowM,airTV,trendingM,trendingTV] = await Promise.all([
           api("/trending/all/week"),
           api("/movie/popular",{region:"US"}),
           api("/tv/popular"),
           api("/movie/top_rated",{region:"US"}),
           api("/movie/now_playing",{region:"US"}),
-          api("/tv/on_the_air")
+          api("/tv/on_the_air"),
+          api("/trending/movie/week"),
+          api("/trending/tv/week")
         ]);
         const clean=a=>a.results?.filter(x=>x.poster_path) || [];
         const trend=clean(trending);
         setHeroItems(trend.slice(0,5));
         setHero(trend[0]);
+        setMovieHero((trendingM.results||[]).find(x=>x.backdrop_path)||popularM.results?.[0]||null);
+        setSeriesHero((trendingTV.results||[]).find(x=>x.backdrop_path)||popularTV.results?.[0]||null);
         setRows({
           "Trending This Week":trend,
           "Popular Movies":clean(popularM),
@@ -262,9 +269,10 @@ function App(){
     }catch(e){setError("Could not open this title.");}
   };
 
-  const doSearch=async(e)=>{
+  const doSearch=async(e,value)=>{
     e?.preventDefault();
-    const q=search.trim(); if(!q) return;
+    const q=(value??search).trim(); if(!q) return;
+    setRecentSearches(current=>{const next=[q,...current.filter(x=>x.toLowerCase()!==q.toLowerCase())].slice(0,8);localStorage.setItem("zxh-recent-searches",JSON.stringify(next));return next;});
     setLoading(true); setPage("search"); setQuery(q);
     setYoutubeSearchLoading(true); setYoutubeSearchError(""); setYoutubeSearchResults([]);
     window.scrollTo({top:0,behavior:"auto"});
@@ -303,14 +311,14 @@ function App(){
 
   return <div className="app" data-theme={theme}>
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
-    <Header search={search} setSearch={setSearch} submit={doSearch} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} theme={theme} toggleTheme={toggleTheme} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>
+    <Header search={search} setSearch={setSearch} submit={doSearch} openSearch={()=>go("search")} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} theme={theme} toggleTheme={toggleTheme} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Preparing your cinema experience…</span></div> :
       <>
         {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : page==="live" ? <><Suspense fallback={<div className="loading-screen live-route-loading" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Opening Live TV…</span></div>}><LiveTV/></Suspense><Footer/></> : <>
-        {page==="home" && hero && <Hero item={hero} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved(hero.id)} onBrowse={go}/>}
-        <main className={page==="home" ? "content home-content":"content"}>
-          {page==="search" && <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div>}
+        {(page==="home"||page==="movie"||page==="tv") && (page==="home"?hero:page==="movie"?movieHero:seriesHero) && <Hero item={page==="home"?hero:page==="movie"?movieHero:seriesHero} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved((page==="home"?hero:page==="movie"?movieHero:seriesHero).id)} onBrowse={go}/>}
+        <main className={["home","movie","tv"].includes(page) ? "content home-content":"content"}>
+          {page==="search" && (query ? <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div> : <SearchLanding recent={recentSearches} clearRecent={()=>{setRecentSearches([]);localStorage.removeItem("zxh-recent-searches");}} setSearch={setSearch} searchNow={term=>doSearch(null,term)}/> )}
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
           {page==="category" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH COLLECTION</span><h1>{categoryLabels[activeCategory]||"Trending"}</h1><p>{activeCategory==="midnight"?"Explore late-night movies and TV-MA series, with each title listed only once.":activeCategory==="series"?"Discover trending TV shows, web series, popular seasons and top-rated series.":"Explore separate trending, popular and top-rated picks in this collection."}</p></div></div>}
@@ -353,6 +361,18 @@ function App(){
 
 function mediaTypeFor(x,fallback){return x.media_type||(x.first_air_date?"tv":fallback);}
 
+function SearchLanding({recent,clearRecent,setSearch,searchNow}){
+  const trending=["Romance Is a Bonus Book","Love in Disguise","Shine on Me","The Lord of the Rings","Study Group","The Remarried Empress"];
+  const pick=value=>{setSearch(value);searchNow(value);};
+  return <section className="search-landing">
+    <div className="search-landing-head"><span className="eyebrow">DISCOVER SOMETHING NEW</span><h1>Find your next favourite.</h1><p>Search movies, TV shows and series across the ZXH collection.</p></div>
+    {recent.length>0&&<div className="search-chip-section"><div className="search-chip-heading"><h2>Recent</h2><button type="button" onClick={clearRecent}>Clear <X size={14}/></button></div><div className="search-chips">{recent.map((term,index)=><button type="button" key={term+index} onClick={()=>pick(term)}>{term}</button>)}</div></div>}
+    <div className="search-chip-section"><div className="search-chip-heading"><h2>🔥 Everyone is searching</h2></div><div className="search-chips trending-searches">{trending.map(term=><button type="button" key={term} onClick={()=>pick(term)}>{term}</button>)}</div></div>
+    <div className="search-category-tabs"><span>✦</span><button className="active" type="button">Movie</button><button type="button" onClick={()=>pick("popular TV series")}>Series</button><button type="button" onClick={()=>pick("short TV")}>Short TV</button><button type="button" onClick={()=>pick("music")}>Music</button></div>
+    <div className="search-discovery-note"><strong>Explore ZXH OFFICIAL</strong><span>Discover movies and series with clean results, no promotional ad cards.</span></div>
+  </section>;
+}
+
 function YouTubeSearchRow({items,loading,error,openPlayer}){
   if(!loading&&!error&&!items.length) return null;
   return <section className="row-section youtube-search-section">
@@ -368,14 +388,14 @@ function YouTubeSearchRow({items,loading,error,openPlayer}){
 
 const categoryItems=[["Trending","trending"],["Movies","movies"],["Series","series"],["Midnight","midnight"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Pakistani","pakistani"],["Korean","korean"],["Turkish","turkish"],["Action","action"],["Comedy","comedy"],["Horror","horror"],["Live TV","live"]];
 const categoryLabels=Object.fromEntries(categoryItems.map(([label,key])=>[key,label]));
-function Header({search,setSearch,submit,open,setOpen,go,page,activeCategory,chooseCategory,theme,toggleTheme,countryCode,countryOptions,loadCountry}){
+function Header({search,setSearch,submit,openSearch,open,setOpen,go,page,activeCategory,chooseCategory,theme,toggleTheme,countryCode,countryOptions,loadCountry}){
   return <header className="header glass">
     <div className="header-main">
       <button className="brand" onClick={()=>go("home")} aria-label="ZXH Official OTT home">
         <span className="brand-mark">Z</span><span>ZXH <b>OFFICIAL OTT</b></span>
       </button>
       <nav className="desktop-nav">{navItems.map(([label,Icon,key])=><button className={page===key?"active":""} key={key} onClick={()=>go(key)}><Icon size={16}/>{label}</button>)}</nav>
-      <form className="searchbox" onSubmit={submit}><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies & series…"/>{search&&<button type="button" onClick={()=>setSearch("")}><X size={14}/></button>}</form>
+      <form className="searchbox" onSubmit={submit}><Search size={17}/><input value={search} onFocus={()=>{if(page!=="search")openSearch();}} onChange={e=>setSearch(e.target.value)} placeholder="Search movies & series…"/>{search&&<button type="button" onClick={()=>setSearch("")}><X size={14}/></button>}</form>
       <button type="button" className="theme-toggle" onClick={toggleTheme} aria-label={"Switch to "+(theme==="light"?"dark":"light")+" mode"} title={theme==="light"?"Switch to dark mode":"Switch to light mode"}>{theme==="light"?<Moon size={18}/>:<Sun size={18}/>}</button>
       <button type="button" className="menu-btn" aria-label="Open navigation menu" aria-expanded={open} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button>
     </div>
