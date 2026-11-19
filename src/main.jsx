@@ -54,13 +54,6 @@ function App(){
   const [installHelpMessage,setInstallHelpMessage]=useState("");
 
   useEffect(()=>{
-    let timer;
-    const standalone=window.matchMedia?.("(display-mode: standalone)")?.matches||window.navigator.standalone===true;
-    const alreadyInstalled=standalone||localStorage.getItem("pwaInstalled")==="true";
-    const dismissed=localStorage.getItem("pwaInstallPromptDismissed_v2")==="true";
-    if(!alreadyInstalled&&!dismissed){
-      timer=window.setTimeout(()=>setShowInstallPrompt(true),1500);
-    }
     const onBeforeInstall=e=>{
       e.preventDefault();
       setInstallPromptEvent(e);
@@ -77,7 +70,6 @@ function App(){
       navigator.serviceWorker.register("/sw.js").catch(()=>{});
     }
     return()=>{
-      window.clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt",onBeforeInstall);
       window.removeEventListener("appinstalled",onInstalled);
     };
