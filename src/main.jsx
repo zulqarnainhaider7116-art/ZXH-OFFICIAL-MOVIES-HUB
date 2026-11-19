@@ -310,6 +310,7 @@ function App(){
         {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : page==="live" ? <><Suspense fallback={<div className="loading-screen live-route-loading" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Opening Live TV…</span></div>}><LiveTV/></Suspense><Footer/></> : <>
         {(page==="home"||page==="movie"||page==="tv"||page==="category") && (page==="home"?hero:page==="movie"?movieHero:page==="tv"?seriesHero:Object.values(categoryData).flat().find(x=>x?.backdrop_path)) && <Hero item={page==="home"?hero:page==="movie"?movieHero:page==="tv"?seriesHero:Object.values(categoryData).flat().find(x=>x?.backdrop_path)} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved((page==="home"?hero:page==="movie"?movieHero:page==="tv"?seriesHero:Object.values(categoryData).flat().find(x=>x?.backdrop_path)).id)} onBrowse={go}/>}
         <main className={["home","movie","tv"].includes(page) ? "content home-content":"content"}>
+          {page==="home" && <RankingModule api={api} openDetails={openDetails} go={go}/> }
           {page==="search" && (query ? <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div> : <SearchLanding recent={recentSearches} clearRecent={()=>{setRecentSearches([]);localStorage.removeItem("zxh-recent-searches");}} setSearch={setSearch} searchNow={term=>doSearch(null,term)}/> )}
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
@@ -420,6 +421,55 @@ function Hero({item,openDetails,toggleWatch,saved,onBrowse}){
     <div className="hero-poster"><img src={img(item.poster_path,"w780")} alt={titleOf(item)} loading="eager"/></div>
     <div className="scroll-cue">SCROLL TO EXPLORE <ChevronRight size={15}/></div>
   </section>
+}
+
+function RankingModule({api,openDetails,go}){
+  const [tab,setTab]=useState("Movies");
+  const [items,setItems]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState("");
+  useEffect(()=>{
+    let active=true;
+    setLoading(true);setError("");
+    const load=async()=>{
+      try{
+        let data;
+        if(tab==="TV Series") data=await api("/tv/top_rated",{page:"1"});
+        else if(tab==="Anime") data=await api("/discover/tv",{with_genres:"16",with_original_language:"ja",sort_by:"vote_average.desc","vote_count.gte":"20"});
+        else if(tab==="Trending") data=await api("/trending/all/week");
+        else data=await api("/movie/top_rated",{region:"US",page:"1"});
+        const results=(data.results||[]).filter(item=>item.poster_path).map(item=>({
+          ...item,media_type:item.media_type||(tab==="TV Series"||tab==="Anime"?"tv":"movie")
+        }));
+        if(active)setItems(results.slice(0,12));
+      }catch(e){if(active){setItems([]);setError(e.message||"Ranking is temporarily unavailable.");}}
+      finally{if(active)setLoading(false);}
+    };
+    load();
+    return()=>{active=false;};
+  },[tab]);
+  const tabs=["Movies","TV Series","Anime","Trending"];
+  return <section className="ranking-module">
+    <div className="ranking-head">
+      <div><span className="eyebrow">TOP PICKS · UPDATED</span><h2>Ranking</h2></div>
+      <button type="button" className="ranking-all" onClick={()=>go(tab==="TV Series"?"tv":"movie")}>All <ChevronRight size={15}/></button>
+    </div>
+    <div className="ranking-tabs" role="tablist" aria-label="Ranking category">
+      {tabs.map(name=><button type="button" role="tab" aria-selected={tab===name} key={name} className={tab===name?"active":""} onClick={()=>setTab(name)}>{name}</button>)}
+    </div>
+    {loading?<div className="ranking-list ranking-loading" aria-label="Loading rankings">{[0,1,2,3].map(i=><div className="ranking-skeleton" key={i}><i/><span/></div>)}</div>:
+      error?<p className="ranking-error" role="status">{error}</p>:
+      <div className="ranking-list">
+        {items.map((item,index)=><button type="button" className="ranking-card" key={item.id+"-"+index} onClick={()=>openDetails(item)} aria-label={"Open ranking "+(index+1)+": "+titleOf(item)}>
+          <div className="ranking-poster">
+            <img src={img(item.poster_path,"w500")} alt={titleOf(item)} loading="lazy" decoding="async"/>
+            <span className={"ranking-number rank-"+(index+1)}>{index+1}</span>
+            <span className="ranking-score"><Star size={10} fill="currentColor"/>{scoreOf(item)}</span>
+          </div>
+          <span className="ranking-title">{titleOf(item)}</span>
+        </button>)}
+      </div>}
+  </section>;
 }
 
 function MovieRow({title,items,openDetails}){
