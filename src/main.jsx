@@ -149,6 +149,8 @@ function App(){
         setSeriesHero((trendingTV.results||[]).find(x=>x.backdrop_path)||popularTV.results?.[0]||null);
         setRows({
           "Trending This Week":trend,
+          "Trending Movies":clean(trendingM),
+          "Trending Series":clean(trendingTV),
           "Popular Movies":clean(popularM),
           "Popular Series":clean(popularTV),
           "Top Rated":clean(topM),
@@ -302,8 +304,8 @@ function App(){
   const sectionData = useMemo(()=>{
     if(page==="list") return {"My List":watchlist};
     if(page==="history") return {"Continue Exploring":history};
-    if(page==="movie") return {"Popular Movies":rows["Popular Movies"]||[],"Top Rated":rows["Top Rated"]||[]};
-    if(page==="tv") return {"Popular Series":rows["Popular Series"]||[],"On Air":rows["On Air"]||[]};
+    if(page==="movie") return {"Trending Movies":rows["Trending Movies"]||[],"Popular Movies":rows["Popular Movies"]||[],"Top Rated":rows["Top Rated"]||[],"Now Playing":rows["Now Playing"]||[]};
+    if(page==="tv") return {"Trending Series":rows["Trending Series"]||[],"Popular Series":rows["Popular Series"]||[],"On Air":rows["On Air"]||[]};
     if(page==="search") return {"Search Results":rows["Search Results"]||[]};
     if(page==="category") return categoryData;
     if(page==="country") return countryRows;
