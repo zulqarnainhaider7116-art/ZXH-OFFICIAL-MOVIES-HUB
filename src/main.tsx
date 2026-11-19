@@ -9,8 +9,6 @@ import {
 const LiveTV = React.lazy(() => import("./LiveTV.tsx"));
 import "./v2.css";
 import TmdbUniverse from "./TmdbUniverse.tsx";
-import { Canvas } from "@react-three/fiber";
-import { Float, Environment, MeshTransmissionMaterial } from "@react-three/drei";
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || "5842b1e115a82d3dd7d335874888c943";
 const API_BASE = import.meta.env.VITE_TMDB_BASE_URL || "https://api.themoviedb.org/3";
@@ -316,7 +314,7 @@ function App(){
 
   return <div className="app" data-theme={theme}>
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
-    {!selected && page!=="player" && page!=="search" && <Header search={search} setSearch={setSearch} submit={doSearch} openSearch={()=>go("search")} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} theme={theme} toggleTheme={toggleTheme} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>}
+    <LandingHeader theme={theme} toggleTheme={toggleTheme}/>
     {!selected && page==="search" && <SearchTopBar search={search} setSearch={setSearch} submit={doSearch} onBack={()=>go("home")}/>}
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Preparing your cinema experience…</span></div> :
@@ -339,7 +337,7 @@ function App(){
           {page==="country" && <div className="page-head category-page-head"><div><span className="eyebrow">COUNTRY COLLECTION</span><h1>{countryOptions.find(x=>x[0]===countryCode)?.[1]||countryCode}</h1><p>Movies, genres, anime and television from your selected country.</p></div></div>}
           {page==="country"&&countryLoading&&<p className="country-loading">Loading country collections…</p>}
           {page==="country"&&countryError&&<p className="fak-error">{countryError}</p>}
-          {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}\n          {page==="home" && <TmdbUniverse api={api} setRows={setRows} openDetails={openDetails} MovieRow={MovieRow}/>}
+          {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}\n          
           {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
           {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && !(page==="country"&&countryLoading) && page!=="home" && !(page==="search"&&!query) && <Empty page={page}/>}
         </main>
@@ -348,7 +346,7 @@ function App(){
       </>
     }
     {selected && <Details item={selected} close={()=>setSelected(null)} toggleWatch={toggleWatch} saved={isSaved(selected.id)} openDetails={openDetails} openPlayer={openPlayer}/>}
-    {!selected && !["player","search","live"].includes(page) && <MobileNav page={page} go={go}/>}
+    
     <div id="installPromptOverlay" className="install-overlay" hidden={!showInstallPrompt} role="dialog" aria-modal="true" aria-labelledby="install-title">
       <div className="install-card">
         <button id="installClose" className="install-close" type="button" onClick={dismissInstallPrompt} aria-label="Close install popup">×</button>
@@ -414,8 +412,18 @@ function Header({search,setSearch,submit,openSearch,open,setOpen,go,page,activeC
   </header>
 }
 
-function Hero({item,openDetails,toggleWatch,saved,onBrowse}){
-  return <section className="hero" style={{"--hero":`url(${backdrop(item.backdrop_path)})`}}><div className="hero-3d" aria-hidden="true"><Canvas camera={{position:[0,0,4.2],fov:42}} dpr={[1,1.5]}><ambientLight intensity={1.1}/><directionalLight position={[3,4,5]} intensity={2.2}/><Float speed={1.2} rotationIntensity={0.35} floatIntensity={0.5}><mesh><icosahedronGeometry args={[1.18,5]}/><MeshTransmissionMaterial backside samples={4} thickness={0.35} roughness={0.14} transmission={0.96} ior={1.25} chromaticAberration={0.035} color="#c6b8ff"/></mesh></Float><Environment preset="city"/></Canvas></div>
+function LandingHeader({theme,toggleTheme}){
+  return <header className="landing-header">
+    <div className="landing-header-inner">
+      <div className="brand" aria-label="ZXH OFFICIAL home"><span className="brand-mark">Z</span><span>ZXH <b>OFFICIAL</b></span></div>
+      <span className="landing-header-label">MOVIES · SERIES</span>
+      <button type="button" className="theme-toggle landing-theme" onClick={toggleTheme} aria-label={"Switch to "+(theme==="light"?"dark":"light")+" mode"}>{theme==="light"?<Moon size={18}/>:<Sun size={18}/>}</button>
+    </div>
+  </header>;
+}
+
+function Hero({item,openDetails,toggleWatch,saved}){
+  return <section className="hero" style={{"--hero":`url(${backdrop(item.backdrop_path)})`}}>
     <div className="hero-shade"/>
     <div className="hero-content">
       <div className="eyebrow"><Sparkles size={14}/> FEATURED THIS WEEK</div>
@@ -425,10 +433,6 @@ function Hero({item,openDetails,toggleWatch,saved,onBrowse}){
       <div className="hero-actions">
         <button className="primary-btn" onClick={()=>openDetails(item)}><Play size={17} fill="currentColor"/> Watch Details</button>
         <button className="glass-btn" onClick={()=>toggleWatch(item)}>{saved?<Check size={17}/>:<Plus size={17}/>} {saved?"In My List":"My List"}</button>
-      </div>
-      <div className="hero-browse-links" aria-label="Browse movies and TV series">
-        <button type="button" onClick={()=>onBrowse("movie")}><Film size={15}/> Movies</button>
-        <button type="button" onClick={()=>onBrowse("tv")}><Tv size={15}/> TV Series</button>
       </div>
     </div>
     <div className="hero-poster"><img src={img(item.poster_path,"w780")} alt={titleOf(item)} loading="eager"/></div>
