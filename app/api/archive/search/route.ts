@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const q = (request.nextUrl.searchParams.get("q") || "").trim().slice(0, 100);
   if (q.length < 2) return json(400, { error: { code: "invalid_query", message: "Provide a title with at least 2 characters." } });
   try {
-    const safe = q.replace(/[\\"]/g, " ").replace(/\\s+/g, " ").trim();
+    const safe = q.replace(/[\\"]/g, " ").replace(/\s+/g, " ").trim();
     const url = new URL(IA_SEARCH);
     url.searchParams.set("q", `mediatype:movies AND title:"${safe}"`);
     ["identifier", "title"].forEach((field) => url.searchParams.append("fl[]", field));
@@ -30,12 +30,12 @@ export async function GET(request: NextRequest) {
         const data = await response.json();
         const meta = data?.metadata || {};
         const rights = [meta.licenseurl, meta.rights].flat().filter(Boolean).join(" ").toLowerCase();
-        if (!/public.?domain|creativecommons\\.org\\/licenses\\//i.test(rights)) return null;
+        if (!/public.?domain|creativecommons\.org\/licenses\//i.test(rights)) return null;
         const files = (data.files || []).filter((file: any) => {
           const name = String(file.name || "").toLowerCase();
           const format = String(file.format || "").toLowerCase();
           return !file.source && !file.private && !file.encrypted &&
-            (format.includes("mpeg4") || format === "h.264" || format === "webm" || /\\.(mp4|m4v|webm)$/.test(name));
+            (format.includes("mpeg4") || format === "h.264" || format === "webm" || /\.(mp4|m4v|webm)$/.test(name));
         }).sort((a: any, b: any) => Number(b.size || 0) - Number(a.size || 0));
         const file = files[0];
         if (!file) return null;
