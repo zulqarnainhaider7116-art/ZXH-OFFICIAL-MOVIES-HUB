@@ -314,7 +314,7 @@ function App(){
 
   return <div className="app" data-theme={theme}>
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
-    <LandingHeader theme={theme} toggleTheme={toggleTheme}/>
+    <LandingHeader/>
     {!selected && page==="search" && <SearchTopBar search={search} setSearch={setSearch} submit={doSearch} onBack={()=>go("home")}/>}
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Preparing your cinema experience…</span></div> :
@@ -412,12 +412,11 @@ function Header({search,setSearch,submit,openSearch,open,setOpen,go,page,activeC
   </header>
 }
 
-function LandingHeader({theme,toggleTheme}){
+function LandingHeader(){
   return <header className="landing-header">
     <div className="landing-header-inner">
       <div className="brand" aria-label="ZXH OFFICIAL home"><span className="brand-mark">Z</span><span>ZXH <b>OFFICIAL</b></span></div>
       <span className="landing-header-label">MOVIES · SERIES</span>
-      <button type="button" className="theme-toggle landing-theme" onClick={toggleTheme} aria-label={"Switch to "+(theme==="light"?"dark":"light")+" mode"}>{theme==="light"?<Moon size={18}/>:<Sun size={18}/>}</button>
     </div>
   </header>;
 }
