@@ -8,6 +8,7 @@ import {
 const LiveTV = React.lazy(() => import("./LiveTV.jsx"));
 import "./styles.css";
 import "./reference-layout.css";
+import "./liquid-glass-theme.css";
 import TmdbUniverse from "./TmdbUniverse.jsx";
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || "5842b1e115a82d3dd7d335874888c943";
@@ -314,6 +315,7 @@ function App(){
 
   return <div className="app" data-theme={theme}>
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
+    {(selected || player || page==="search") && <button type="button" className="floating-theme-toggle" onClick={toggleTheme} aria-label={"Switch to "+(theme==="light"?"dark":"light")+" mode"} title={theme==="light"?"Switch to dark mode":"Switch to light mode"}>{theme==="light"?<Moon size={19}/>:<Sun size={19}/>}</button>}
     {!selected && page!=="player" && page!=="search" && <Header search={search} setSearch={setSearch} submit={doSearch} openSearch={()=>go("search")} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} theme={theme} toggleTheme={toggleTheme} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>}
     {!selected && page==="search" && <SearchTopBar search={search} setSearch={setSearch} submit={doSearch} onBack={()=>go("home")}/>}
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
