@@ -154,7 +154,7 @@ export default function MoviboxExperience() {
     setSaved(next); localStorage.setItem("zxh-watchlist", JSON.stringify(next));
   };
 
-  const go = key => { setPage(key); setDetail(null); setPlayer(null); setError(""); window.scrollTo(0,0); };
+  const go = key => { setPage(key); if (key !== "detail") setDetail(null); if (key !== "player") setPlayer(null); setError(""); window.scrollTo(0,0); };
   const runSearch = async e => {
     e?.preventDefault(); const q = search.trim(); if (!q) return;
     setQuery(q); setPage("search"); setBusy(true); setError("");
