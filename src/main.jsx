@@ -312,12 +312,13 @@ function App(){
 
   return <div className="app" data-theme={theme}>
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
-    <Header search={search} setSearch={setSearch} submit={doSearch} openSearch={()=>go("search")} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} theme={theme} toggleTheme={toggleTheme} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>
+    {!selected && page!=="player" && page!=="search" && <Header search={search} setSearch={setSearch} submit={doSearch} openSearch={()=>go("search")} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} theme={theme} toggleTheme={toggleTheme} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>}
+    {!selected && page==="search" && <SearchTopBar search={search} setSearch={setSearch} submit={doSearch} onBack={()=>go("home")}/>
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Preparing your cinema experience…</span></div> :
       <>
         {page==="player" && player ? <PlayerScreen entry={player} onBack={closePlayer}/> : page==="live" ? <><Suspense fallback={<div className="loading-screen live-route-loading" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Opening Live TV…</span></div>}><LiveTV/></Suspense><Footer/></> : <>
-        {(page==="home"||page==="movie"||page==="tv") && (page==="home"?hero:page==="movie"?movieHero:seriesHero) && <Hero item={page==="home"?hero:page==="movie"?movieHero:seriesHero} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved((page==="home"?hero:page==="movie"?movieHero:seriesHero).id)} onBrowse={go}/>}
+        {(page==="home"||page==="movie"||page==="tv"||page==="category") && (page==="home"?hero:page==="movie"?movieHero:page==="tv"?seriesHero:Object.values(categoryData).flat().find(x=>x?.backdrop_path)) && <Hero item={page==="home"?hero:page==="movie"?movieHero:page==="tv"?seriesHero:Object.values(categoryData).flat().find(x=>x?.backdrop_path)} openDetails={openDetails} toggleWatch={toggleWatch} saved={isSaved((page==="home"?hero:page==="movie"?movieHero:page==="tv"?seriesHero:Object.values(categoryData).flat().find(x=>x?.backdrop_path)).id)} onBrowse={go}/>
         <main className={["home","movie","tv"].includes(page) ? "content home-content":"content"}>
           {page==="search" && (query ? <div className="page-head"><div><span className="eyebrow">DISCOVER</span><h1>Results for “{query}”</h1></div><button className="glass-btn" onClick={()=>go("home")}><ArrowLeft size={16}/> Home</button></div> : <SearchLanding recent={recentSearches} clearRecent={()=>{setRecentSearches([]);localStorage.removeItem("zxh-recent-searches");}} setSearch={setSearch} searchNow={term=>doSearch(null,term)}/> )}
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
@@ -338,12 +339,12 @@ function App(){
           {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
           {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && !(page==="country"&&countryLoading) && page!=="home" && !(page==="search"&&!query) && <Empty page={page}/>}
         </main>
-        <Footer/>
+        {!selected && page!=="search" && <Footer/>}
         </>}
       </>
     }
     {selected && <Details item={selected} close={()=>setSelected(null)} toggleWatch={toggleWatch} saved={isSaved(selected.id)} openDetails={openDetails} openPlayer={openPlayer}/>}
-    {page!=="player" && <MobileNav page={page} go={go}/>}
+    {!selected && !["player","search","live"].includes(page) && <MobileNav page={page} go={go}/>}
     <div id="installPromptOverlay" className="install-overlay" hidden={!showInstallPrompt} role="dialog" aria-modal="true" aria-labelledby="install-title">
       <div className="install-card">
         <button id="installClose" className="install-close" type="button" onClick={dismissInstallPrompt} aria-label="Close install popup">×</button>
@@ -361,6 +362,10 @@ function App(){
 
 
 function mediaTypeFor(x,fallback){return x.media_type||(x.first_air_date?"tv":fallback);}
+
+function SearchTopBar({search,setSearch,submit,onBack}){
+  return <div className="search-screen-topbar"><button type="button" onClick={onBack} aria-label="Back"><ArrowLeft/></button><form className="search-screen-input" onSubmit={submit}><Search size={20}/><input autoFocus value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies, series…"/>{search&&<button type="button" onClick={()=>setSearch("")}><X size={16}/></button>}<button className="search-submit" type="submit">Search</button></form></div>;
+}
 
 function SearchLanding({recent,clearRecent,setSearch,searchNow}){
   const trending=["Romance Is a Bonus Book","Love in Disguise","Shine on Me","The Lord of the Rings","Study Group","The Remarried Empress"];
