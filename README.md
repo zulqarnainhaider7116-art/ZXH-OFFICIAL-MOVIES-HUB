@@ -1,25 +1,19 @@
-# ZXH Movies — 3D Liquid Glass Cinema
+# ZXH OFFICIAL MOVIES HUB
 
-A React + Vite movie/TV discovery web app using TMDB metadata.
+Movie and series discovery experience built with **Next.js App Router, React and TypeScript**, styled around the extracted MOVIBOX Android resource reference.
 
-## Features
-- 3D liquid-glass cinematic UI
-- Responsive desktop/tablet/mobile layouts
-- TMDB trending, popular, top-rated, now-playing and on-air collections
-- Search across movies and TV
-- Movie/series detail modal
-- Cast, genres, trailer link and recommendations
-- Local watchlist
-- Local browsing history
-- Mobile bottom navigation
-- SEO meta tags, Open Graph and Twitter metadata
-- TMDB attribution notice
+## Stack
+- Next.js 15 App Router
+- React 18
+- TypeScript for the application shell and server routes
+- Existing React discovery, detail, search, watchlist, history and player components retained
+- Existing Vercel API endpoints retained
+- Server-side TMDB proxy at `/api/tmdb/*`
 
-## Setup
-
-1. Install Node.js 18+.
-2. Copy `.env.example` to `.env`.
-3. Put your TMDB V3 key in `VITE_TMDB_API_KEY`.
+## Run locally
+1. Install Node.js 20 or newer.
+2. Copy `.env.example` to `.env.local`.
+3. Set `TMDB_API_KEY` to your TMDB v3 API key.
 4. Run:
 
 ```bash
@@ -27,19 +21,31 @@ npm install
 npm run dev
 ```
 
-For production:
+Open http://localhost:3000.
 
+## Production
 ```bash
 npm run build
-npm run preview
+npm start
 ```
 
-Deploy the generated `dist` folder to Vercel, Netlify, Cloudflare Pages, etc.
+Deploy the repository to Vercel with the project framework set to **Next.js**. Add `TMDB_API_KEY` in Vercel Project Settings → Environment Variables, then redeploy.
 
-## Important API note
-Vite exposes `VITE_*` values to browser code. Therefore a V3 API key placed there is not a secret. For a public production deployment, proxy TMDB requests through your own server/serverless function and keep credentials server-side where appropriate.
+## Existing API routes
+The existing Vercel endpoints under `/api` are preserved:
+- `/api/fak/*`
+- `/api/fak/movie-detail`
+- `/api/davidcyril/watch`
+- `/api/archive/search`
+- `/api/youtube/search`
 
-TMDB requires attribution and the notice:
-"This product uses the TMDB API but is not endorsed or certified by TMDB."
+The TMDB API key is read server-side by the Next.js proxy and is not sent to the browser.
 
-This project provides metadata/discovery and does not include unauthorized movie-streaming resolvers. Connect only lawful/authorized video providers to the player layer.
+## MOVIBOX reference
+The extracted Android resources were used as the layout and visual reference: app navigation, home category structure, poster cards, ranking treatments, player controls, typography and the original green brand token. Third-party content and playback providers remain subject to their own availability and rights.
+
+## Credits
+**ZXH OFFICIAL**  
+Created by **ZULQARNAIN X HAIDER**
+
+TMDB attribution: This product uses the TMDB API but is not endorsed or certified by TMDB.
