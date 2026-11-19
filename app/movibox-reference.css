@@ -1,0 +1,50 @@
+/* MOVIBOX resource-derived presentation tokens. Existing app behavior remains in src/. */
+:root {
+  --accent: #07b84e;
+  --mb-brand: #07b84e;
+  --mb-rank-one-a: #fd3ab4;
+  --mb-rank-one-b: #ff2e62;
+  --mb-rank-two-a: #f59133;
+  --mb-rank-two-b: #ff5140;
+  --mb-rank-three-a: #ffba1f;
+  --mb-rank-three-b: #ff9625;
+}
+
+.app {
+  font-family: "Mulish", Arial, sans-serif !important;
+}
+
+.app .brand-mark {
+  background: #07b84e !important;
+  color: #fff !important;
+}
+
+.app .primary-btn,
+.app .search-screen-input .search-submit {
+  background: #07b84e !important;
+  color: #fff !important;
+}
+
+.app .desktop-nav button.active,
+.app .desktop-nav button:hover,
+.app .mobile-nav button.active {
+  color: #fff !important;
+}
+
+.app .score,
+.app .rating {
+  color: #fff;
+}
+
+.app .rank-number.rank-one { background: linear-gradient(135deg, #fd3ab4, #ff2e62); }
+.app .rank-number.rank-two { background: linear-gradient(135deg, #f59133, #ff5140); }
+.app .rank-number.rank-three { background: linear-gradient(135deg, #ffba1f, #ff9625); }
+
+@media (max-width: 700px) {
+  .app {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .app .mobile-nav {
+    padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
+  }
+}
