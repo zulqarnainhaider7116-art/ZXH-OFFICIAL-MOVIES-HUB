@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 const LiveTV = React.lazy(() => import("./LiveTV.jsx"));
 import "./styles.css";
+import "./reference-layout.css";
 import TmdbUniverse from "./TmdbUniverse.jsx";
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY || "5842b1e115a82d3dd7d335874888c943";
