@@ -2,12 +2,12 @@
 
 import dynamic from "next/dynamic";
 
-const ExistingMovieHub = dynamic(() => import("../src/main.jsx"), {
+const MoviboxExperience = dynamic(() => import("../src/MoviboxExperience.jsx"), {
   ssr: false,
   loading: () => (
     <div className="loading-screen" role="status" aria-live="polite">
       <span className="spin">◌</span>
-      <span>Loading ZXH OFFICIAL…</span>
+      <span>Loading ZXH OFFICIAL MOVIES…</span>
     </div>
   ),
 });
