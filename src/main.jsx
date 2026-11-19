@@ -336,7 +336,7 @@ function App(){
           {page==="country"&&countryError&&<p className="fak-error">{countryError}</p>}
           {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}\n          {page==="home" && <TmdbUniverse api={api} setRows={setRows} openDetails={openDetails} MovieRow={MovieRow}/>}
           {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
-          {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && !(page==="country"&&countryLoading) && page!=="home" && <Empty page={page}/>}
+          {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && !(page==="country"&&countryLoading) && page!=="home" && !(page==="search"&&!query) && <Empty page={page}/>}
         </main>
         <Footer/>
         </>}
@@ -597,7 +597,7 @@ function Details({item,close,toggleWatch,saved,openDetails,openPlayer}){
       </div>
       <div className="details-body">
         {activeSource==="fak"&&(fakLoading||fakError||fakResults.length>0||fakEpisodes.length>0||fakPlayer)&&<div className="detail-block fak-block">
-          <div className="trailer-heading"><div><h3>ZXH OFFICIAL PLAYER</h3><span className="fak-powered">Premium playback experience</span></div>{fakResults.length>0&&<button className="glass-btn" onClick={()=>{setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");}}>Reset</button>}</div>
+          <div className="trailer-heading"><div><h3>ZXH OFFICIAL PLAYER</h3><span className="fak-powered">Available playback sources</span></div>{fakResults.length>0&&<button className="glass-btn" onClick={()=>{setFakResults([]);setFakEpisodes([]);setFakPlayer(null);setFakError("");}}>Reset</button>}</div>
           {fakLoading&&<p>Searching available sources…</p>}
           {fakError&&<p className="fak-error">{fakError}</p>}
           {fakResults.length>0&&<div className="fak-results">{fakResults.map((result,index)=><button className="fak-result" key={result.id||index} onClick={()=>chooseFakResult(result)}><img src={result.image||""} alt="" loading="lazy"/><span><strong>{result.title}</strong><small>{result.year||"Year unavailable"} · {result.type} {result.views?"· "+result.views+" views":""}</small></span><ChevronRight size={18}/></button>)}</div>}
