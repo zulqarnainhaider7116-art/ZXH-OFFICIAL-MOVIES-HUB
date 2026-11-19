@@ -92,3 +92,39 @@
  .app .details-copy h1{font-size:24px}
  .app .player-shell{min-height:170px}
 }
+
+
+/* TRUE SCREEN ROUTING — ZXH OFFICIAL */
+.search-screen-topbar{position:relative;z-index:30;display:flex;align-items:center;gap:14px;width:min(100%,1180px);margin:0 auto;padding:22px clamp(16px,3vw,34px);min-height:82px;border-bottom:1px solid var(--line)}
+.search-screen-topbar>button{flex:0 0 36px;width:36px;height:42px;border:0;background:transparent;color:var(--text);display:grid;place-items:center}
+.search-screen-input{display:flex;align-items:center;gap:12px;flex:1;min-width:0;height:54px;padding:0 14px;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--text)}
+.search-screen-input input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:16px}
+.search-screen-input .search-submit{border:0;background:transparent;color:var(--accent);font-weight:800;padding:9px 7px}
+.app:has(>.search-screen-topbar){min-height:100dvh}
+.app:has(>.search-screen-topbar) .search-landing{padding-top:clamp(28px,5vh,58px)}
+.app .modal-backdrop{position:fixed!important;inset:0!important;z-index:1000!important;display:block!important;padding:0!important;overflow:auto!important;background:var(--bg)!important;backdrop-filter:none!important}
+.app .details-modal{width:100%!important;height:100dvh!important;max-height:100dvh!important;max-width:none!important;margin:0!important;border:0!important;border-radius:0!important;overflow-y:auto!important;overscroll-behavior:contain}
+.app .details-cover{min-height:min(540px,64vh);padding:clamp(72px,10vh,120px) clamp(18px,5vw,72px) 30px}
+.app .details-top{max-width:1200px;margin:0 auto}
+.app .details-body{max-width:1200px;margin:0 auto}
+.app .modal-close{position:fixed!important;top:max(14px,env(safe-area-inset-top))!important;left:16px!important;right:auto!important;z-index:10!important;width:44px;height:44px;border-radius:50%;background:#111b;color:#fff;border:1px solid #ffffff30;backdrop-filter:blur(12px)}
+.app .player-page{min-height:100dvh;padding-top:max(20px,env(safe-area-inset-top));padding-bottom:calc(50px + env(safe-area-inset-bottom))}
+.app .player-shell{min-height:260px}
+.app .player-topbar{position:sticky;top:0;z-index:5;padding:8px 0;background:var(--bg)}
+.app .category-page-head{max-width:1180px;margin:0 auto 24px;padding:18px clamp(16px,3vw,34px)}
+.app .hero+.home-content{padding-top:26px}
+.app .home-content{padding-bottom:70px}
+@media(max-width:700px){
+ .search-screen-topbar{padding:12px 12px;gap:9px;min-height:68px}
+ .search-screen-input{height:48px;gap:8px;padding:0 10px}
+ .search-screen-input input{font-size:14px}
+ .search-screen-input .search-submit{font-size:13px}
+ .app .modal-close{top:max(10px,env(safe-area-inset-top))!important;left:12px!important}
+ .app .details-cover{min-height:54vh;padding:74px 16px 22px}
+ .app .details-top{align-items:flex-end}
+ .app .details-body{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+ .app .player-page{padding:10px 12px calc(36px + env(safe-area-inset-bottom))}
+ .app .player-shell{min-height:200px}
+ .app .player-topbar{position:relative}
+ .app .category-page-head{padding:14px 17px;margin-bottom:14px}
+}
