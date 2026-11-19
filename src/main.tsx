@@ -6,9 +6,9 @@ import {
   Plus, Check, Star, ChevronRight, ChevronLeft, Info, SlidersHorizontal,
   Sparkles, Bookmark, History, ArrowLeft, AlertCircle, Radio, Sun, Moon
 } from "lucide-react";
-const LiveTV = React.lazy(() => import("./LiveTV.jsx"));
+const LiveTV = React.lazy(() => import("./LiveTV.tsx"));
 import "./v2.css";
-import TmdbUniverse from "./TmdbUniverse.jsx";
+import TmdbUniverse from "./TmdbUniverse.tsx";
 import { Canvas } from "@react-three/fiber";
 import { Float, Environment, MeshTransmissionMaterial } from "@react-three/drei";
 
