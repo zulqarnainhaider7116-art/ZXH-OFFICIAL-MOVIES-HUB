@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   },
   description: "Discover movies, series, live television and entertainment with ZXH OFFICIAL.",
   applicationName: "ZXH OFFICIAL MOVIES HUB",
+  manifest: "/manifest.json",
+  icons: { icon: ["/favicon.svg", "/favicon.jpg"], apple: "/favicon.jpg" },
   keywords: ["ZXH OFFICIAL", "movies", "series", "TV", "entertainment"],
   authors: [{ name: "ZULQARNAIN X HAIDER" }],
   creator: "ZULQARNAIN X HAIDER",
