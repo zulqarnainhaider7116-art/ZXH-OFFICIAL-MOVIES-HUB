@@ -1,21 +1,23 @@
 {
-  "name": "zxh-movies-liquid-glass",
+  "name": "zxh-official-movies-hub",
   "private": true,
-  "version": "1.0.0",
-  "type": "module",
+  "version": "2.0.0",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
+    "hls.js": "^1.6.15",
     "lucide-react": "^0.468.0",
+    "next": "^15.3.3",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "hls.js": "^1.6.15"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.7"
+    "@types/node": "^22.13.4",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "typescript": "^5.7.3"
   }
 }
