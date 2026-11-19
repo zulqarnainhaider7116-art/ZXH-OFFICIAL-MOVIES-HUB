@@ -315,7 +315,7 @@ function App(){
   return <div className="app" data-theme={theme}>
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
     {!selected && page!=="player" && page!=="search" && <Header search={search} setSearch={setSearch} submit={doSearch} openSearch={()=>go("search")} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} theme={theme} toggleTheme={toggleTheme} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>}
-    {!selected && page==="search" && <SearchTopBar search={search} setSearch={setSearch} submit={doSearch} onBack={()=>go("home")}/>
+    {!selected && page==="search" && <SearchTopBar search={search} setSearch={setSearch} submit={doSearch} onBack={()=>go("home")}/>}
     {error && <div className="toast"><AlertCircle size={17}/>{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}
     {loading && !hero ? <div className="loading-screen" role="status" aria-live="polite"><div className="loading-mark"><span className="brand-mark">Z</span><span className="loading-progress"><i/></span></div><strong>ZXH OFFICIAL</strong><span>Preparing your cinema experience…</span></div> :
       <>
