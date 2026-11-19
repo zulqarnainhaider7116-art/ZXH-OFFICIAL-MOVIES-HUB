@@ -1,23 +1,18 @@
+"use client";
 import React, {Suspense, useEffect, useMemo, useRef, useState} from "react";
-import { createRoot } from "react-dom/client";
 import {
   Search, Home, Film, Tv, Heart, Clock3, UserRound, Menu, X, Play, Globe2,
   Plus, Check, Star, ChevronRight, ChevronLeft, Info, SlidersHorizontal,
   Sparkles, Bookmark, History, ArrowLeft, AlertCircle, Radio, Sun, Moon
 } from "lucide-react";
 const LiveTV = React.lazy(() => import("./LiveTV.jsx"));
-import "./styles.css";
-import "./reference-layout.css";
-import "./liquid-glass-theme.css";
 import TmdbUniverse from "./TmdbUniverse.jsx";
 
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY || "5842b1e115a82d3dd7d335874888c943";
-const API_BASE = import.meta.env.VITE_TMDB_BASE_URL || "https://api.themoviedb.org/3";
-const IMG_BASE = import.meta.env.VITE_TMDB_IMAGE_BASE || "https://image.tmdb.org/t/p";
+const IMG_BASE = "https://image.tmdb.org/t/p";
 
 const api = async (path, params={}) => {
-  const qs = new URLSearchParams({api_key: API_KEY, language:"en-US", ...params});
-  const res = await fetch(`${API_BASE}${path}?${qs}`);
+  const qs = new URLSearchParams({language:"en-US", ...params});
+  const res = await fetch(`/api/tmdb${path}?${qs}`);
   if(!res.ok) throw new Error(`TMDB request failed (${res.status})`);
   return res.json();
 };
@@ -797,4 +792,4 @@ function MobileNav({page,go}){
 function Footer(){
  return <footer><div className="footer-brand"><span className="brand-mark">Z</span><div><strong>ZXH OFFICIAL OTT</strong><small>GLOBAL MOVIES · SERIES · LIVE TV</small></div></div><p>Movies and TV discovery powered by TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB. Live channel listings are supplied by IPTV-org.</p><span>© {new Date().getFullYear()} ZXH OFFICIAL</span></footer>
 }
-createRoot(document.getElementById("root")).render(<App/>);
+export default App;

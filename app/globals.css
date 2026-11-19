@@ -1,0 +1,35 @@
+@import url("https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800;900&display=swap");
+
+:root {
+  --zxh-movibox-brand: #07b84e;
+  --zxh-movibox-blue: #336fff;
+  --zxh-movibox-green: #00e069;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  background: #08090c;
+  font-family: "Mulish", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button, a, input, select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgba(7, 184, 78, .3);
+  color: #fff;
+}
