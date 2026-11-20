@@ -384,3 +384,30 @@
     height: calc(80px + env(safe-area-inset-bottom));
   }
 }
+
+
+/* APK poster overlays: bottom score + compact bottom fade */
+.mb-poster-shade {
+  inset: auto 0 0;
+  height: 48px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.78) 100%);
+}
+.mb-rating {
+  top: auto;
+  right: 5px;
+  bottom: 5px;
+}
+.mb-quality {
+  top: 6px;
+  bottom: auto;
+  left: 6px;
+}
+.mb-rank-item .mb-rating {
+  display: none;
+}
+.mb-rank-item .mb-rank {
+  z-index: 2;
+}
+.mb-poster-title {
+  text-overflow: clip;
+}
