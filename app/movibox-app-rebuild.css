@@ -1,0 +1,246 @@
+/* MOVIBOX mobile rebuild: fit the device viewport without disabling user zoom. */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+body { margin: 0; }
+.app {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+  isolation: isolate;
+}
+.app img, .app video, .app iframe { max-width: 100%; }
+.app .header, .app .content, .app .hero, .app .player-page,
+.app .search-screen-topbar, .app .details-modal { min-width: 0; }
+
+.app .category-nav {
+  max-width: calc(100vw - 28px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+.app .category-nav::-webkit-scrollbar { display: none; }
+
+.app .hero-loading {
+  min-height: clamp(250px, 45vw, 410px);
+  background:
+    radial-gradient(ellipse at 75% 15%, rgba(7,184,78,.2), transparent 42%),
+    linear-gradient(120deg, #171b1a, #090b0a 70%);
+}
+.app .hero-loading .hero-content { max-width: 620px; }
+.app .hero-loading h1 { max-width: 560px; }
+.app .hero-skeleton-pill {
+  display: inline-block;
+  width: 112px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.12);
+  animation: mb-pulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes mb-pulse { to { opacity: .42; } }
+
+@media (max-width: 700px) {
+  :root { --card-w: clamp(96px, 27vw, 124px); --gap: 10px; }
+
+  .app .header {
+    top: max(7px, env(safe-area-inset-top));
+    width: calc(100% - 16px) !important;
+    height: 52px !important;
+    min-height: 52px;
+    padding: 5px 8px !important;
+    border-radius: 14px !important;
+  }
+  .app .header-main { height: 40px !important; gap: 6px !important; min-width: 0; }
+  .app .brand { gap: 7px; font-size: 11px; min-width: 0; }
+  .app .brand-mark { width: 29px !important; height: 29px !important; flex: 0 0 29px; border-radius: 9px !important; }
+  .app .searchbox {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 36px !important;
+    margin: 0 0 0 auto !important;
+    padding: 0 8px !important;
+    gap: 6px !important;
+  }
+  .app .searchbox input { min-width: 0 !important; font-size: 12px !important; }
+  .app .theme-toggle { display: none !important; }
+  .app .menu-btn { width: 34px !important; height: 36px !important; flex: 0 0 34px; border-radius: 10px !important; }
+  .app .category-nav {
+    top: calc(100% + 5px) !important;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: calc(100vw - 16px);
+    gap: 15px !important;
+    padding: 8px 10px 9px !important;
+    border-radius: 0 0 12px 12px;
+    background: rgba(8,10,9,.86) !important;
+    backdrop-filter: blur(16px);
+  }
+  .app .category-nav button { flex: 0 0 auto; font-size: 11px !important; padding: 4px 0 !important; }
+
+  /* The APK uses a compact featured carousel; the old 560–700px hero caused the mobile page to feel zoomed in. */
+  .app .hero {
+    min-height: clamp(260px, 76vw, 330px) !important;
+    max-height: none !important;
+    padding: 104px 15px 22px !important;
+    align-items: flex-end !important;
+    background-position: 58% center !important;
+  }
+  .app .hero-shade {
+    background: linear-gradient(0deg, #08090c 0%, rgba(8,9,12,.8) 36%, rgba(8,9,12,.12) 100%) !important;
+  }
+  .app .hero-content { width: 100% !important; max-width: 100% !important; }
+  .app .hero .eyebrow { font-size: 8px !important; letter-spacing: 1.5px !important; }
+  .app .hero h1 {
+    font-size: clamp(25px, 7.2vw, 34px) !important;
+    line-height: 1.02 !important;
+    letter-spacing: -1.1px !important;
+    margin: 7px 0 8px !important;
+    max-width: 100%;
+  }
+  .app .hero p {
+    max-width: 100% !important;
+    font-size: 10px !important;
+    line-height: 1.45 !important;
+    -webkit-line-clamp: 2 !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .app .hero-poster { display: none !important; }
+  .app .hero-actions { gap: 7px !important; margin-top: 11px !important; }
+  .app .hero-actions .primary-btn, .app .hero-actions .glass-btn {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 0 11px !important;
+    border-radius: 8px !important;
+    font-size: 10px !important;
+  }
+  .app .hero-loading { min-height: clamp(260px, 76vw, 330px) !important; }
+
+  .app .content {
+    width: 100%;
+    max-width: 100%;
+    padding: 12px 13px calc(104px + env(safe-area-inset-bottom)) !important;
+  }
+  .app .home-content { padding-top: 7px !important; }
+  .app .ranking-module { width: calc(100% - 26px) !important; margin: 7px auto 20px !important; }
+  .app .ranking-head h2 { font-size: 18px !important; }
+  .app .ranking-card, .app .ranking-skeleton { flex-basis: 108px !important; }
+  .app .row-section { margin-bottom: 23px !important; }
+  .app .row-head { margin-bottom: 9px !important; }
+  .app .row-head h2 { font-size: 17px !important; }
+  .app .cards-viewport { margin: 0 -13px !important; padding: 2px 13px 8px !important; }
+  .app .movie-card { width: var(--card-w) !important; min-width: var(--card-w) !important; }
+  .app .poster { border-radius: 7px !important; }
+  .app .card-info { padding: 7px 1px 0 !important; }
+  .app .card-info strong { font-size: 10px !important; }
+  .app .card-info span { font-size: 9px !important; }
+
+  /* Keep the original bottom controls pinned to the screen on mobile. */
+  .app .mobile-nav {
+    position: fixed !important;
+    z-index: 100 !important;
+    left: 50% !important;
+    bottom: calc(7px + env(safe-area-inset-bottom)) !important;
+    transform: translateX(-50%) !important;
+    display: flex !important;
+    width: calc(100% - 16px) !important;
+    height: 57px !important;
+    min-height: 57px !important;
+    margin: 0 !important;
+    padding: 4px !important;
+    justify-content: space-around !important;
+    border-radius: 15px !important;
+    background: rgba(15,17,19,.94) !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    box-shadow: 0 9px 30px rgba(0,0,0,.5) !important;
+    backdrop-filter: blur(18px) saturate(125%) !important;
+  }
+  .app .mobile-nav button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    min-height: 47px !important;
+    padding: 3px 1px !important;
+    gap: 3px !important;
+    border-radius: 11px !important;
+    font-size: 9px !important;
+  }
+  .app .mobile-nav button svg { width: 17px; height: 17px; }
+  .app .mobile-nav span { font-size: 8px !important; line-height: 1.1; white-space: nowrap; }
+  .app footer { padding: 24px 15px calc(95px + env(safe-area-inset-bottom)) !important; }
+
+  .app .page-head, .app .page-title { padding-top: 72px !important; margin-bottom: 18px !important; }
+  .app .page-head h1, .app .page-title h1 { font-size: 22px !important; }
+  .app .category-page-head { padding: 16px 14px 0 !important; }
+
+  .app .search-screen-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 80;
+    width: 100% !important;
+    padding: 9px 11px !important;
+    background: #08090c;
+  }
+  .app .search-screen-input { height: 44px !important; min-width: 0; }
+  .app .search-screen-input input { min-width: 0; font-size: 16px !important; }
+  .app .search-screen-input .search-submit { padding: 0 10px !important; font-size: 11px !important; }
+  .app .search-landing { width: 100%; padding: 18px 14px calc(100px + env(safe-area-inset-bottom)) !important; }
+  .app .search-landing-head h1 { font-size: 26px !important; }
+
+  .app .details-modal {
+    width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+  .app .details-cover { min-height: clamp(330px, 48svh, 420px) !important; }
+  .app .details-top {
+    padding: max(78px, 9svh) 14px 17px !important;
+    gap: 11px !important;
+    align-items: flex-end !important;
+  }
+  .app .details-top > img { width: 96px !important; flex: 0 0 96px !important; }
+  .app .details-copy h1 { font-size: clamp(22px, 6vw, 28px) !important; letter-spacing: -.8px !important; }
+  .app .details-copy p { font-size: 10px !important; line-height: 1.45 !important; }
+  .app .details-body { padding: 13px 14px calc(30px + env(safe-area-inset-bottom)) !important; }
+  .app .detail-block { margin-top: 15px !important; }
+
+  .app .player-page { width: 100%; padding: 0 0 calc(32px + env(safe-area-inset-bottom)) !important; }
+  .app .player-topbar { padding: 10px 12px !important; }
+  .app .player-controls { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 7px; }
+  .app .player-controls .glass-btn { width: auto !important; min-width: 0 !important; min-height: 36px !important; height: 36px !important; padding: 0 10px !important; font-size: 10px !important; }
+  .app .player-heading { padding: 0 13px !important; margin: 12px auto !important; gap: 9px !important; }
+  .app .player-heading > img { width: 44px !important; height: 64px !important; }
+  .app .player-heading h1 { font-size: 18px !important; }
+  .app .player-heading p { font-size: 10px !important; }
+  .app .player-shell { width: 100% !important; aspect-ratio: 16 / 9 !important; min-height: 0 !important; max-height: none !important; border-radius: 0 !important; }
+  .app .player-playback-selectors, .app .player-info-row, .app .server7-source-panel, .app .server7-download-panel, .app .player-data-block {
+    width: calc(100% - 26px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .app .player-playback-selectors { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+  .app .player-playback-selectors label { min-width: 0 !important; }
+}
+
+@media (max-width: 390px) {
+  .app .hero { min-height: 260px !important; }
+  .app .hero h1 { font-size: 25px !important; }
+  .app .header .brand > span:last-child { max-width: 72px; overflow: hidden; text-overflow: ellipsis; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app .hero-skeleton-pill { animation: none; }
+}
