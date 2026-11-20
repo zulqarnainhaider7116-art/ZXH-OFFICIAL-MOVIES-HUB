@@ -42,7 +42,7 @@ function Poster({ item, onOpen, rank }) {
 function Rail({ title, items, onOpen, action }) {
   if (!items?.length) return null;
   return <section className="mb-rail">
-    <div className="mb-rail-head"><h2>{title}</h2><button onClick={action || (() => {})}>See all <ChevronRight size={15}/></button></div>
+    <div className="mb-rail-head"><h2>{title}</h2>{action && <button onClick={action}>See all <ChevronRight size={15}/></button>}</div>
     <div className="mb-rail-track">{items.map((item, i) => <Poster key={item.id + "-" + i} item={item} onOpen={onOpen} />)}</div>
   </section>;
 }
@@ -239,7 +239,7 @@ export default function MoviboxExperience() {
 
     {page === "live" && <Suspense fallback={<Loading/>}><LiveTV/></Suspense>}
     {page !== "detail" && page !== "player" && page !== "live" && page !== "shorts" && <main className="mb-content">
-      {page === "home" && <section className="mb-ranking"><div className="mb-section-head"><h2>Top Ranking</h2><span>HOT</span></div><div className="mb-ranking-tabs">{[["movie","Movies"],["tv","TV Series"],["anime","Anime"]].map(([key,label])=><button key={key} className={rankingTab===key?"active":""} onClick={()=>setRankingTab(key)}>{label}</button>)}</div><div className="mb-rank-track">{rankBusy ? Array.from({length:6},(_,i)=><div className="mb-skeleton" key={i}/>) : rankings.map((item,i)=><div className="mb-rank-item" key={item.id}><Poster item={item} onOpen={openDetails} rank={i+1}/></div>)}</div></section>}
+      {page === "home" && <section className="mb-ranking"><div className="mb-section-head"><h2>Top Ranking</h2></div><div className="mb-ranking-tabs">{[["movie","Movies"],["tv","TV Series"],["anime","Anime"]].map(([key,label])=><button key={key} className={rankingTab===key?"active":""} onClick={()=>setRankingTab(key)}>{label}</button>)}</div><div className="mb-rank-track">{rankBusy ? Array.from({length:6},(_,i)=><div className="mb-skeleton" key={i}/>) : rankings.map((item,i)=><div className="mb-rank-item" key={item.id}><Poster item={item} onOpen={openDetails} rank={i+1}/></div>)}</div></section>}
       {page === "search" && <div className="mb-page-heading"><span>SEARCH</span><h1>Results for “{query}”</h1></div>}
       {page === "category" && <div className="mb-page-heading"><span>COLLECTION</span><h1>{categories.find(x=>x[1]===activeCategory)?.[0] || "Discover"}</h1></div>}
       {page === "list" && <div className="mb-page-heading"><span>YOUR LIBRARY</span><h1>My List</h1></div>}
