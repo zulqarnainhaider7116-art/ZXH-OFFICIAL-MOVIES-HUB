@@ -222,8 +222,6 @@ export default function MoviboxExperience() {
 
     {page !== "detail" && page !== "player" && page !== "live" && <div className="mb-categories">{categories.map(([label,key])=><button key={key} className={activeCategory===key?"active":""} onClick={()=>chooseCategory(key,label)}>{label}</button>)}</div>}
 
-    {page === "home" && <div className="mb-type-switch"><button className="active" onClick={()=>go("home")}>Movies &amp; Series</button><button onClick={()=>go("shorts")}>Shorts</button></div>}
-
     {page === "detail" && detail && <main className="mb-detail-page">
       <button className="mb-back" onClick={()=>go("home")}><ArrowLeft size={17}/> Back</button>
       <div className="mb-detail-hero" style={{backgroundImage:detail.backdrop_path ? "linear-gradient(0deg,#101114 2%,rgba(16,17,20,.35) 70%),url("+img(detail.backdrop_path,"w1280")+")" : "linear-gradient(135deg,#202522,#101114)"}}>
