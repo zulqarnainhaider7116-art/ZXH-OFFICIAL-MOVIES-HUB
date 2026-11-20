@@ -6,12 +6,13 @@ import "./movibox-experience.css";
 
 const LiveTV = lazy(() => import("./LiveTV.jsx"));
 const IMG = "https://image.tmdb.org/t/p";
+const MOVIBOX_LOGO = "data:image/webp;base64,UklGRmoDAABXRUJQVlA4WAoAAAAQAAAAHQAAIwAAQUxQSNMAAAABgGLb2rLl+d0hu7tUi/5bgujQHZJD";
 const img = (path, size = "w500") => path ? IMG + "/" + size + path : "";
 const titleOf = x => x?.title || x?.name || x?.original_title || x?.original_name || "Untitled";
 const yearOf = x => (x?.release_date || x?.first_air_date || "").slice(0, 4);
 const scoreOf = x => Number(x?.vote_average || 0).toFixed(1);
 const mediaType = x => x?.media_type || (x?.first_air_date ? "tv" : "movie");
-const categories = [["Trending","trending"],["Movies","movies"],["Series","series"],["Anime","anime"],["Bollywood","bollywood"],["Hollywood","hollywood"],["Korean","korean"],["Turkish","turkish"],["Pakistani","pakistani"],["Action","action"],["Comedy","comedy"],["Horror","horror"]];
+const categories = [["Football","football"],["Trending","trending"],["Movie","movies"],["Nollywood","nollywood"],["TV","series"],["ShortTV","shorts"],["TV Channel","live"],["Anime","anime"],["Kids","kids"],["Education","education"],["Music","music"]];
 const nav = [["Home",Home,"home"],["Movies",Film,"movies"],["Series",Tv,"series"],["My List",Heart,"list"],["History",Clock3,"history"]];
 
 async function tmdb(path, params = {}) {
@@ -165,6 +166,9 @@ export default function MoviboxExperience() {
   };
 
   const chooseCategory = async (key, label) => {
+    if (key === "trending") { setActiveCategory(key); setPage("home"); window.scrollTo(0,0); return; }
+    if (key === "shorts") { setActiveCategory(key); go("shorts"); return; }
+    if (key === "football" || key === "live") { setActiveCategory(key); go("live"); return; }
     setActiveCategory(key); setPage("category"); setBusy(true); setError(""); window.scrollTo(0,0);
     try {
       const fixed = key === "movies" ? [["Trending Movies","/trending/movie/week","movie"],["Popular Movies","/movie/popular","movie"],["Top Rated","/movie/top_rated","movie"]] :
@@ -181,6 +185,10 @@ export default function MoviboxExperience() {
         if (key === "bollywood") params = { ...params, with_original_language:"hi", region:"IN" };
         if (key === "hollywood") params = { ...params, with_original_language:"en", region:"US" };
         if (key === "pakistani") params.with_original_language = "ur";
+        if (key === "nollywood") { params.with_original_language = "en"; params.region = "NG"; }
+        if (key === "kids") params.with_genres = "10751";
+        if (key === "education") params.with_genres = "99";
+        if (key === "music") params.with_genres = "10402";
         if (key === "action") params.with_genres = "28";
         if (key === "comedy") params.with_genres = "35";
         if (key === "horror") params.with_genres = "27";
@@ -197,6 +205,7 @@ export default function MoviboxExperience() {
     if (page === "movies") return Object.fromEntries(Object.entries(rows).filter(([k]) => /Movie|Now Playing/.test(k)));
     if (page === "series") return Object.fromEntries(Object.entries(rows).filter(([k]) => /Series|On Air/.test(k)));
     if (page === "search") return { "Search Results": rows["Search Results"] || [] };
+    if (page === "home") return {};
     return rows;
   }, [page, rows, saved, history]);
 
@@ -206,7 +215,7 @@ export default function MoviboxExperience() {
 
   return <div className="mb-app">
     <header className="mb-top">
-      <button className="mb-brand" onClick={() => go("home")}><span className="mb-logo">Z</span><span>ZXH <b>OFFICIAL</b></span></button>
+      <button className="mb-brand" onClick={() => go("home")} aria-label="MOVIBOX Home"><img className="mb-brand-image" src={MOVIBOX_LOGO} alt="MOVIBOX" /></button>
       <form className="mb-search" onSubmit={runSearch}><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search movies, series…"/><button type="submit">Search</button></form>
       <button className="mb-icon-btn" onClick={() => go("list")} aria-label="My list"><Heart size={19}/></button>
     </header>
