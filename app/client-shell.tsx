@@ -13,5 +13,5 @@ const MoviboxExperience = dynamic(() => import("../src/MoviboxExperience.jsx"), 
 });
 
 export default function ClientShell() {
-  return <ExistingMovieHub />;
+  return <MoviboxExperience />;
 }
