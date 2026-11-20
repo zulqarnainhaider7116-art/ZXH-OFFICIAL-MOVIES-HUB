@@ -4,6 +4,7 @@ import "../src/reference-layout.css";
 import "../src/liquid-glass-theme.css";
 import "./globals.css";
 import "./movibox-reference.css";
+import "./movibox-app-rebuild.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://zxh-official-movies-hub.vercel.app"),
