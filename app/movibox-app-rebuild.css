@@ -244,3 +244,103 @@ body { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   .app .hero-skeleton-pill { animation: none; }
 }
+
+
+/* Unified collection cards: every carousel and recommendation uses the same poster rhythm. */
+.app .row-section,
+.app .mini-grid {
+  min-width: 0;
+}
+.app .mini-grid {
+  display: flex !important;
+  gap: var(--gap, 14px) !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 3px 2px 10px !important;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+.app .mini-grid::-webkit-scrollbar { display: none; }
+.app .mini-grid .movie-card {
+  flex: 0 0 var(--card-w, 145px) !important;
+  width: var(--card-w, 145px) !important;
+  min-width: var(--card-w, 145px) !important;
+  scroll-snap-align: start;
+}
+.app .mini-grid .poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+}
+.app .mini-grid .card-info { min-width: 0; }
+
+/* Cast is a responsive grid, not one long row that can stretch the details page. */
+.app .cast {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)) !important;
+  gap: 14px 12px !important;
+  width: 100%;
+  max-width: 100%;
+  overflow: visible !important;
+  padding: 2px 0 8px !important;
+}
+.app .cast-item {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 150px;
+  overflow: hidden;
+}
+.app .cast-item img {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+.app .cast-item strong,
+.app .cast-item span {
+  display: block;
+  width: 100%;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
+.app .cast-item strong { font-size: 11px !important; }
+.app .cast-item span { font-size: 9px !important; }
+
+.app .details-modal,
+.app .details-body,
+.app .detail-block,
+.app .details-top,
+.app .details-copy { min-width: 0; max-width: 100%; }
+.app .details-body { overflow-wrap: anywhere; }
+.app .detail-block > * { max-width: 100%; }
+.app .details-copy .meta,
+.app .details-copy .hero-actions,
+.app .genres { flex-wrap: wrap; }
+.app .genres { row-gap: 7px; }
+
+@media (max-width: 700px) {
+  .app .mini-grid {
+    margin: 0 -14px !important;
+    padding: 3px 14px 10px !important;
+    gap: 10px !important;
+  }
+  .app .mini-grid .movie-card {
+    flex-basis: var(--card-w) !important;
+    width: var(--card-w) !important;
+    min-width: var(--card-w) !important;
+  }
+  .app .cast {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 13px 9px !important;
+  }
+  .app .cast-item { max-width: none; }
+  .app .details-top,
+  .app .details-copy,
+  .app .details-body { width: 100%; }
+  .app .details-copy .meta { gap: 7px !important; }
+  .app .details-copy .hero-actions { display: flex; flex-wrap: wrap; }
+}
+@media (max-width: 360px) {
+  .app .cast { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
