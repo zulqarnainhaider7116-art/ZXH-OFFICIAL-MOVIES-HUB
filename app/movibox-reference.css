@@ -227,3 +227,97 @@
   .ranking-skeleton i { animation: none; }
   .ranking-card:hover .ranking-poster img { transform: none; }
 }
+
+
+/* MOVIBOX HOME — APK-derived compact header, tabs, poster rail and bottom dock. */
+.app[data-page="home"] > .hero{display:none!important}
+.app[data-page="home"] .header{
+  top:0!important;left:0!important;transform:none!important;
+  width:100%!important;max-width:none!important;height:70px!important;
+  border-radius:0!important;padding:8px 12px!important;
+  border-left:0!important;border-right:0!important;border-top:0!important;
+}
+.app[data-page="home"] .header-main{height:44px!important;gap:10px!important}
+.app[data-page="home"] .brand-mark{
+  width:30px!important;height:30px!important;flex:0 0 30px!important;
+  border-radius:7px!important;
+}
+.app[data-page="home"] .searchbox{
+  height:36px!important;min-height:36px!important;border-radius:8px!important;
+  padding:0 10px!important;max-width:360px!important;
+}
+.app[data-page="home"] .category-nav{
+  top:70px!important;left:0!important;right:0!important;
+  height:36px!important;min-height:36px!important;
+  padding:2px 12px 4px!important;gap:18px!important;
+  border:0!important;border-bottom:1px solid var(--line)!important;
+  border-radius:0!important;background:var(--bg)!important;
+  box-shadow:none!important;
+}
+.app[data-page="home"] .category-nav button{
+  min-height:30px!important;padding:4px 2px!important;
+  border:0!important;border-radius:0!important;
+  background:transparent!important;font-size:12px!important;
+}
+.app[data-page="home"] .category-nav button.active{
+  color:var(--accent)!important;position:relative;
+}
+.app[data-page="home"] .category-nav button.active:after{
+  content:"";position:absolute;left:0;right:0;bottom:-3px;
+  height:3px;border-radius:3px;background:#07b84e;
+}
+.app[data-page="home"] .home-content{
+  padding:118px 0 100px!important;
+}
+.app[data-page="home"] .ranking-module{
+  width:calc(100% - 24px)!important;margin:4px auto 22px!important;
+}
+.app[data-page="home"] .row-section{
+  width:calc(100% - 24px)!important;margin:0 auto 24px!important;
+}
+.app[data-page="home"]{
+  --card-w:149px;
+  --gap:10px;
+}
+.app[data-page="home"] .poster{
+  border-radius:5px!important;aspect-ratio:1/1.39!important;
+}
+.app[data-page="home"] .poster:after{
+  content:"";position:absolute;z-index:1;left:0;right:0;bottom:0;
+  height:48px;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,.72));
+}
+.app[data-page="home"] .score{
+  top:auto!important;left:auto!important;right:6px!important;bottom:7px!important;
+  z-index:3!important;padding:4px 6px!important;border-radius:4px!important;
+}
+.app[data-page="home"] .quality{
+  top:6px!important;left:6px!important;right:auto!important;
+  z-index:3!important;padding:4px 6px!important;border-radius:4px!important;
+}
+.app[data-page="home"] .poster-gloss{z-index:1}
+.app[data-page="home"] .card-info{padding:7px 1px 0!important}
+.app[data-page="home"] .card-info strong{
+  display:-webkit-box!important;-webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;white-space:normal!important;
+  overflow:hidden!important;text-overflow:ellipsis!important;
+  min-height:32px!important;font-size:12px!important;line-height:1.35!important;
+}
+.app[data-page="home"] .card-info span{font-size:10px!important;margin-top:4px!important}
+.app[data-page="home"] .mobile-nav{
+  bottom:0!important;left:0!important;transform:none!important;
+  width:100%!important;height:80px!important;
+  border-radius:16px 16px 0 0!important;
+  padding:7px 8px max(7px,env(safe-area-inset-bottom))!important;
+}
+.app[data-page="home"] .mobile-nav button{font-size:10px!important;gap:5px!important}
+.app[data-page="home"] .mobile-nav span{font-size:10px!important}
+@media(max-width:700px){
+  .app[data-page="home"] .header{height:62px!important;padding:7px 12px!important}
+  .app[data-page="home"] .header-main{height:42px!important}
+  .app[data-page="home"] .category-nav{top:62px!important;height:36px!important}
+  .app[data-page="home"] .home-content{padding-top:108px!important}
+  .app[data-page="home"]{--card-w:149px;--gap:10px}
+  .app[data-page="home"] .row-section{width:calc(100% - 24px)!important}
+  .app[data-page="home"] .mobile-nav{height:80px!important}
+}
