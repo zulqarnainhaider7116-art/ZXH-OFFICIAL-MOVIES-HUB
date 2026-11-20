@@ -171,7 +171,7 @@ function App(){
       const [moviePages,tvPages]=await Promise.all([
         Promise.all([1,2,3].map(page=>api("/discover/movie",{
           with_genres:"27,53,9648",include_adult:"true",sort_by:"primary_release_date.desc",
-          vote_count_gte:"1",page
+          "vote_count.gte":"1",page
         }))),
         Promise.all([1,2,3].map(page=>api("/discover/tv",{
           certification_country:"US",certification:"TV-MA",sort_by:"popularity.desc",page
