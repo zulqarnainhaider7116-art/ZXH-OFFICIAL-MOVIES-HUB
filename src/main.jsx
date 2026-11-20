@@ -300,7 +300,7 @@ function App(){
     return rows;
   },[page,rows,watchlist,history,activeCategory,categoryData,countryRows]);
 
-  return <div className="app" data-theme={theme}>
+  return <div className="app" data-theme={theme} data-page={page}>
     <div className="ambient a1"/><div className="ambient a2"/><div className="grain"/>
     {!selected && page!=="player" && page!=="search" && <Header search={search} setSearch={setSearch} submit={doSearch} openSearch={()=>go("search")} open={mobileOpen} setOpen={setMobileOpen} go={go} page={page} activeCategory={activeCategory} chooseCategory={chooseCategory} theme={theme} toggleTheme={toggleTheme} countryCode={countryCode} countryOptions={countryOptions} loadCountry={loadCountry}/>}
     {!selected && page==="search" && <SearchTopBar search={search} setSearch={setSearch} submit={doSearch} onBack={()=>go("home")}/>}
