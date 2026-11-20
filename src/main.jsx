@@ -326,7 +326,8 @@ function App(){
           {page==="country" && <div className="page-head category-page-head"><div><span className="eyebrow">COUNTRY COLLECTION</span><h1>{countryOptions.find(x=>x[0]===countryCode)?.[1]||countryCode}</h1><p>Movies, genres, anime and television from your selected country.</p></div></div>}
           {page==="country"&&countryLoading&&<p className="country-loading">Loading country collections…</p>}
           {page==="country"&&countryError&&<p className="fak-error">{countryError}</p>}
-          {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}\n          {page==="home" && <TmdbUniverse api={api} setRows={setRows} openDetails={openDetails} MovieRow={MovieRow}/>}
+          {Object.entries(sectionData).map(([name,items])=><MovieRow key={name} title={name} items={items} openDetails={openDetails}/>)}
+          {page==="home" && <TmdbUniverse api={api} setRows={setRows} openDetails={openDetails} MovieRow={MovieRow}/>}
           {page==="search"&&<YouTubeSearchRow items={youtubeSearchResults} loading={youtubeSearchLoading} error={youtubeSearchError} openPlayer={openPlayer}/>}
           {Object.values(sectionData).every(a=>!a?.length) && !(page==="search"&&(youtubeSearchLoading||youtubeSearchResults.length)) && !(page==="category"&&categoryLoading) && !(page==="country"&&countryLoading) && page!=="home" && !(page==="search"&&!query) && <Empty page={page}/>}
         </main>
@@ -477,7 +478,7 @@ function MovieRow({title,items,openDetails}){
   if(!items?.length) return null;
   const move=d=>setOffset(v=>Math.max(0,Math.min(Math.max(items.length-5,0),v+d)));
   return <section className="row-section">
-    <div className="row-head"><div><span className="eyebrow">COLLECTION</span><h2>{title}</h2></div><div className="row-controls"><button onClick={()=>move(-4)}><ChevronLeft/></button><button onClick={()=>move(4)}><ChevronRight/></button></div></div>
+    <div className="row-head"><div><h2>{title}</h2></div><div className="row-controls"><button onClick={()=>move(-4)}><ChevronLeft/></button><button onClick={()=>move(4)}><ChevronRight/></button></div></div>
     <div className="cards-viewport"><div className="cards" style={{transform:`translateX(calc(-${offset} * (var(--card-w) + var(--gap))))`}}>
       {items.map((item,i)=><MovieCard key={`${item.id}-${i}`} item={item} openDetails={openDetails}/>)}
     </div></div>
