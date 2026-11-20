@@ -165,25 +165,33 @@ function App(){
   const [categoryData,setCategoryData]=useState({});
   const [categoryLoading,setCategoryLoading]=useState(false);
   const [categoryError,setCategoryError]=useState("");
-  const [catalogType,setCatalogType]=useState("movie");
-  const loadAdultCatalog=async(key,type="movie")=>{
+  const loadAdultCatalog=async()=>{
     setCategoryLoading(true);setCategoryError("");setCategoryData({});
     try{
-      const isTV=type==="tv";
-      const params=isTV
-        ? {certification_country:"US",certification:"TV-MA",sort_by:"popularity.desc"}
-        : {with_genres:"27,53,9648",include_adult:"true",sort_by:"primary_release_date.desc"};
-      const pages=await Promise.all([1,2,3].map(page=>api(isTV?"/discover/tv":"/discover/movie",{...params,page,...(!isTV?{ "vote_count.gte":"1" }:{})})));
-      const seen=new Set();
-      const items=pages.flatMap(data=>data.results||[]).filter(item=>{
-        if(!item.id||!item.poster_path||seen.has(item.id))return false;
-        seen.add(item.id);
-        return true;
-      }).map(item=>({...item,media_type:type}));
-      setCategoryData({[isTV?"Midnight TV Series":"Midnight Movies"]:items});
+      const [moviePages,tvPages]=await Promise.all([
+        Promise.all([1,2,3].map(page=>api("/discover/movie",{
+          with_genres:"27,53,9648",include_adult:"true",sort_by:"primary_release_date.desc",
+          vote_count_gte:"1",page
+        }))),
+        Promise.all([1,2,3].map(page=>api("/discover/tv",{
+          certification_country:"US",certification:"TV-MA",sort_by:"popularity.desc",page
+        })))
+      ]);
+      const unique=pages=>{
+        const seen=new Set();
+        return pages.flatMap(data=>data.results||[]).filter(item=>{
+          if(!item.id||!item.poster_path||seen.has(item.id))return false;
+          seen.add(item.id);return true;
+        });
+      };
+      setCategoryData({
+        "Midnight Movies":unique(moviePages).map(item=>({...item,media_type:"movie"})),
+        "Midnight TV Series":unique(tvPages).map(item=>({...item,media_type:"tv"}))
+      });
     }catch(e){setCategoryError(e.message||"Unable to load Midnight collection.");}
     finally{setCategoryLoading(false);}
   };
+
   const [countryCode,setCountryCode]=useState("PK");
   const [countryRows,setCountryRows]=useState({});
   const [countryLoading,setCountryLoading]=useState(false);
@@ -212,7 +220,7 @@ function App(){
       setActiveCategory(key);setPage("category");setPlayer(null);
       setCatalogType("movie");
       window.scrollTo({top:0,behavior:"auto"});
-      await loadAdultCatalog(key,"movie");
+      await loadAdultCatalog();
       return;
     }
     setActiveCategory(key);setPage("category");setPlayer(null);setCategoryLoading(true);setCategoryError("");setCategoryData({});
@@ -315,12 +323,6 @@ function App(){
           {page==="list" && <PageTitle icon={<Heart/>} title="My List" text="Your saved cinematic picks."/>}
           {page==="history" && <PageTitle icon={<History/>} title="History" text="Recently explored titles."/>}
           {page==="category" && <div className="page-head category-page-head"><div><span className="eyebrow">ZXH COLLECTION</span><h1>{categoryLabels[activeCategory]||"Trending"}</h1><p>{activeCategory==="midnight"?"Explore late-night movies and TV-MA series, with each title listed only once.":activeCategory==="series"?"Discover trending TV shows, web series, popular seasons and top-rated series.":"Explore separate trending, popular and top-rated picks in this collection."}</p></div></div>}
-          {page==="category"&&(activeCategory==="midnight")&&<div className="catalog-filters" aria-label="Midnight catalog filters">
-            <div className="catalog-type-switch" role="group" aria-label="Content type">
-              <button type="button" className={catalogType==="movie"?"active":""} onClick={()=>{setCatalogType("movie");loadAdultCatalog(activeCategory,"movie");}}>Movies</button>
-              <button type="button" className={catalogType==="tv"?"active":""} onClick={()=>{setCatalogType("tv");loadAdultCatalog(activeCategory,"tv");}}>TV Shows &amp; Series</button>
-            </div>
-          </div>}
           {page==="category"&&categoryLoading&&<p className="country-loading">Building your {categoryLabels[activeCategory]||"category"} collection…</p>}
           {page==="category"&&categoryError&&<p className="fak-error">{categoryError}</p>}
           {page==="country" && <div className="page-head category-page-head"><div><span className="eyebrow">COUNTRY COLLECTION</span><h1>{countryOptions.find(x=>x[0]===countryCode)?.[1]||countryCode}</h1><p>Movies, genres, anime and television from your selected country.</p></div></div>}
