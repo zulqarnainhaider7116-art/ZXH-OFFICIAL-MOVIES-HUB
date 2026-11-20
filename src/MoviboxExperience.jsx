@@ -81,16 +81,20 @@ export default function MoviboxExperience() {
     (async () => {
       setBusy(true); setError("");
       try {
-        const [trending, movies, series, top, now, onAir] = await Promise.all([
-          tmdb("/trending/all/week"), tmdb("/movie/popular"), tmdb("/tv/popular"),
-          tmdb("/movie/top_rated"), tmdb("/movie/now_playing"), tmdb("/tv/on_the_air")
+        const [trendingMovies, trendingSeries, movies, series, topMovies, topSeries, now, onAir] = await Promise.all([
+          tmdb("/trending/movie/week"), tmdb("/trending/tv/week"),
+          tmdb("/movie/popular"), tmdb("/tv/popular"),
+          tmdb("/movie/top_rated"), tmdb("/tv/top_rated"),
+          tmdb("/movie/now_playing"), tmdb("/tv/on_the_air")
         ]);
         if (!live) return;
         setRows({
-          "Trending This Week": clean(trending),
+          "Trending Movies": clean(trendingMovies, "movie"),
+          "Trending Series": clean(trendingSeries, "tv"),
           "Popular Movies": clean(movies, "movie"),
           "Popular Series": clean(series, "tv"),
-          "Top Rated Movies": clean(top, "movie"),
+          "Top Rated Movies": clean(topMovies, "movie"),
+          "Top Rated Series": clean(topSeries, "tv"),
           "Now Playing": clean(now, "movie"),
           "On Air": clean(onAir, "tv")
         });
@@ -245,7 +249,7 @@ export default function MoviboxExperience() {
       {error && <div className="mb-error">{error}</div>}
       {busy ? <Loading/> : Object.entries(visibleRows).map(([name,items])=><Rail key={name} title={name} items={items} onOpen={openDetails}/>)}
       {!busy && Object.values(visibleRows).every(x=>!x?.length) && <div className="mb-empty"><Film size={28}/><b>No titles to show</b><span>Choose another category or search for a title.</span></div>}
-      {page === "home" && <><Rail title="Trending This Week" items={rows["Trending This Week"]} onOpen={openDetails}/><Rail title="Popular Movies" items={rows["Popular Movies"]} onOpen={openDetails}/><Rail title="Popular Series" items={rows["Popular Series"]} onOpen={openDetails}/><Rail title="Top Rated Movies" items={rows["Top Rated Movies"]} onOpen={openDetails}/><Rail title="Now Playing" items={rows["Now Playing"]} onOpen={openDetails}/><Rail title="On Air" items={rows["On Air"]} onOpen={openDetails}/></>}
+      {page === "home" && <><Rail title="Trending Movies" items={rows["Trending Movies"]} onOpen={openDetails}/><Rail title="Trending Series" items={rows["Trending Series"]} onOpen={openDetails}/><Rail title="Popular Movies" items={rows["Popular Movies"]} onOpen={openDetails}/><Rail title="Popular Series" items={rows["Popular Series"]} onOpen={openDetails}/><Rail title="Top Rated Movies" items={rows["Top Rated Movies"]} onOpen={openDetails}/><Rail title="Top Rated Series" items={rows["Top Rated Series"]} onOpen={openDetails}/><Rail title="Now Playing" items={rows["Now Playing"]} onOpen={openDetails}/><Rail title="On Air" items={rows["On Air"]} onOpen={openDetails}/></>}
     </main>}
 
     {page === "shorts" && <main className="mb-content"><div className="mb-empty"><Film size={28}/><b>Shorts</b><span>Short-form feed layout is ready for its dedicated content source.</span></div></main>}
